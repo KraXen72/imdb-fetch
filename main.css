@@ -1,0 +1,109 @@
+* {
+    box-sizing: border-box;
+    outline: 0px solid transparent !important;
+    --matter-helper-theme: 165, 117, 98;
+    --matter-onsurface-rgb: 163, 165, 170;
+
+    --card-height: 15rem;
+}
+body, html {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+:root {
+    font-size: 16px;
+}
+
+#main-grid {
+    display: grid;
+    grid-template: max-content 1fr min-content / 1fr;
+    width: 100vw;
+    height: 100vh;
+    padding: 1rem;
+    
+}
+#inpholder {
+    grid-row: 1 / 2;
+    padding: 0.8rem 0;
+}
+#results {
+    grid-row: 2 / 3;
+    background: var(--bg-secondary);
+    border-radius: 1rem;
+    padding: 0.8rem;
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    flex-wrap: wrap;
+}
+
+#search, #inpholder label {
+    width: 100%;
+}
+/*result card*/
+
+.result-card {
+    display: grid;
+    grid-template-rows: 1fr max-content max-content;
+    height: min-content;
+    margin: 0.2rem !important;
+    width: 10.5rem;
+    row-gap: 0.2rem;
+}
+.poster {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: var(--card-height);
+    width: 100%;
+    background: var(--bg-primary);
+    border-radius: 0.5rem !important;
+    position: relative;
+}
+.poster-img {
+    height: var(--card-height);
+    width: 100%;
+    border-radius: 0.5rem !important;
+    object-fit: cover;
+}
+.contain {
+    object-fit: contain !important;
+}
+.poster-open {
+    position: absolute;
+    background: #262626be;
+    color: var(--text);
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    padding: 1rem;
+    text-decoration: none;
+    font-weight: bold;
+}
+.poster-open:hover {
+    opacity: 1;
+}
+.title {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+#footer, #nothing {
+    color: gray;
+    text-align: center;
+    padding-top: 1rem;
+}
+#nothing img {
+    width: 30%;
+    height: 30%;
+    filter: saturate(77%);
+}
+#nothing {
+    font-weight: bold;
+}
