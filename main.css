@@ -70,6 +70,9 @@ body, html {
 .contain {
     object-fit: contain !important;
 }
+.cover {
+    object-fit: cover !important;
+}
 .poster-open {
     position: absolute;
     background: #262626be;

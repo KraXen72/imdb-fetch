@@ -37,6 +37,7 @@ function debounce(func, timeout = 300){
     };
 }
 
+/*ui stuff*/
 function renderResults(obj) {
     let resultsDiv = document.getElementById("results")
     resultsDiv.innerHTML = `` 
@@ -48,9 +49,7 @@ function renderResults(obj) {
             const result = obj.d[i];
             //only do movies, skip people
             if (result.id.substring(0, 2) !== "nm") {
-                
                 genResultCard(result)
-                
             }
         }
     }
@@ -63,20 +62,75 @@ function genResultCard(result) {
     let rCard = document.createElement("div")
     rCard.classList.add("result-card")
     rCard.innerHTML = `
-    <div class="poster">
-        <img 
-        src="${result.i === undefined ? imgNA : result.i[0].replace("._V1_.jpg", "._V1._SX40_CR0,,337,500_.jpg")}" 
-        class="poster-img ${result.i !== undefined && result.i[1] > result.i[2] ? "contain" : ""}" 
+    <div class="poster" imdb-id="${result.id}">
+        <!-- ultra low quality pic -->
+        <img src="${imgUtil.getImgOfQuality(result.i[0], "ulq")}" 
+        class="poster-img ulq ${imgUtil.containCover(result.i[1], result.i[2])}" 
         onerror="placeholder.png" draggable="false">
+        <!-- low quality pic -->
+        <img src="${imgUtil.getImgOfQuality(result.i[0], "lq")}" 
+        class="poster-img lq ${imgUtil.containCover(result.i[1], result.i[2])}" 
+        onerror="placeholder.png" draggable="false" style="display: none;">
+        <!-- high quality pic -->
+        <img src="${imgUtil.getImgOfQuality(result.i[0], "hq")}" 
+        class="poster-img hq ${imgUtil.containCover(result.i[1], result.i[2])}" 
+        onerror="placeholder.png" draggable="false" style="display: none;">
+        <!-- link to be reworked -->
         <a href="${`https://imdb.com/title/${result.id}/`}" class="poster-open" target="_blank">view on imdb</a>
     </div>
     <strong class="title" title="${result.l}">${result.l}</strong>
     <div class="year-and-id"><span class="year" id="year-${result.id}">${result.y === undefined ? "N/A" : result.y}</span><span class="noselect"> &bull; </span><span class="imdbID" id="imdbid-${result.id}">${result.id}</></div>
     `
-    rCard.querySelector('img.poster-img').onload = () => {
-        rCard.querySelector('img.poster-img').src = result.i === undefined ? imgNA : result.i[0]
+    let hq = rCard.querySelector('img.poster-img.hq')
+    let lq = rCard.querySelector('img.poster-img.lq')
+    let ulq = rCard.querySelector('img.poster-img.ulq')
+
+    lq.onload = () => {
+        lq.style.display = "block";
+        ulq.style.display = "none"
+        lq.onload = ""
+    }
+    hq.onload = () => {
+        hq.style.display = "block";
+        lq.style.display = "none";
+        ulq.style.display = "none"
+        hq.onload = ""
+        lq.onload = ""
     }
     resultsDiv.appendChild(rCard)
 }
 
 function addScript(src) { var s = document.createElement('script'); s.src = src; s.classList.add('imdb-request'); document.head.appendChild(s); }
+
+const imgUtil = {}
+
+/**
+ * set the contain or cover for object fit.
+ * @param {String} width width of img
+ * @param {String} height height of img
+ * @return {String|String} "cover" or "contain"
+ */
+imgUtil.containCover = (width, height) => { 
+    return width >= height ? "contain" : "cover"
+}
+/**
+ * get the image from imdb api in hq or lq.
+ * @param {String} img image link
+ * @param {String} quality "hq", "lq" or "ulq"
+ * @returns link to image in desired quality
+ */
+imgUtil.getImgOfQuality = (img, quality) => {
+    if (img === undefined || img === null) {
+        return imgNA
+    } else {
+        if (quality === "hq") {
+            return img
+        } else if (quality === "lq") {
+            return img.replace("._V1_.jpg", "._V1._SX40_CR0,,337,500_.jpg")
+        } else if (quality === 'ulq') {
+            return img.replace("._V1_.jpg", "._V1._SX40_CR0,,202,300_.jpg")
+        } else {
+            throw "No quality selected."
+        }
+    }
+}
