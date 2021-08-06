@@ -57,33 +57,38 @@ function renderResults(obj) {
 
 //get the html for a result card
 function genResultCard(result) {
+    console.log("card: ", result)
     let resultsDiv = document.getElementById("results")
 
     let rCard = document.createElement("div")
     rCard.classList.add("result-card")
     rCard.innerHTML = `
     <div class="poster" imdb-id="${result.id}">
-        <!-- ultra low quality pic -->
-        <img src="${imgUtil.getImgOfQuality(result.i[0], "ulq")}" 
-        class="poster-img ulq ${imgUtil.containCover(result.i[1], result.i[2])}" 
+        <img src="${imgUtil.getImgOfQuality(result.i, "ulq")}" 
+        class="poster-img ulq ${imgUtil.containCover(result.i, result.i)}" 
         onerror="placeholder.png" draggable="false">
-        <!-- low quality pic -->
-        <img src="${imgUtil.getImgOfQuality(result.i[0], "lq")}" 
-        class="poster-img lq ${imgUtil.containCover(result.i[1], result.i[2])}" 
+        <img src="${imgUtil.getImgOfQuality(result.i, "lq")}" 
+        class="poster-img lq ${imgUtil.containCover(result.i, result.i)}" 
         onerror="placeholder.png" draggable="false" style="display: none;">
-        <!-- high quality pic -->
-        <img src="${imgUtil.getImgOfQuality(result.i[0], "hq")}" 
-        class="poster-img hq ${imgUtil.containCover(result.i[1], result.i[2])}" 
+        <img src="${imgUtil.getImgOfQuality(result.i, "hq")}" 
+        class="poster-img hq ${imgUtil.containCover(result.i, result.i)}" 
         onerror="placeholder.png" draggable="false" style="display: none;">
-        <!-- link to be reworked -->
-        <a href="${`https://imdb.com/title/${result.id}/`}" class="poster-open" target="_blank">view on imdb</a>
+        <div class="card-hover">
+            <button class="matter-button-outlined vimdb">imdb</button>
+            <button class="matter-button-outlined cimdb">copy ID</button>
+            <button class="matter-button-outlined vtmdb">tmdb</button>
+            <button class="matter-button-outlined ctmdb">copy ID</button>
+            <button class="matter-button-outlined details">details</button>
+            <div class="type">${result.q === "feature" ? "Movie" : result.q}</div>
+        </div>
+        <a href="${`https://imdb.com/title/${result.id}/`}" hidden class="poster-open" target="_blank">view on imdb</a>
     </div>
     <strong class="title" title="${result.l}">${result.l}</strong>
     <div class="year-and-id"><span class="year" id="year-${result.id}">${result.y === undefined ? "N/A" : result.y}</span><span class="noselect"> &bull; </span><span class="imdbID" id="imdbid-${result.id}">${result.id}</></div>
     `
-    let hq = rCard.querySelector('img.poster-img.hq')
-    let lq = rCard.querySelector('img.poster-img.lq')
-    let ulq = rCard.querySelector('img.poster-img.ulq')
+    const hq = rCard.querySelector('img.poster-img.hq')
+    const lq = rCard.querySelector('img.poster-img.lq')
+    const ulq = rCard.querySelector('img.poster-img.ulq')
 
     lq.onload = () => {
         lq.style.display = "block";
@@ -97,40 +102,83 @@ function genResultCard(result) {
         hq.onload = ""
         lq.onload = ""
     }
+
+    /*button onclicks*/
+    rCard.querySelector('.vimdb').onclick = () => {cardUtil.fancyLinkOpen(`https://imdb.com/title/${result.id}/`)}
+    
+
+    
     resultsDiv.appendChild(rCard)
+
+    apiHelper.processTMDB(result.id, rCard)
+
 }
 
 function addScript(src) { var s = document.createElement('script'); s.src = src; s.classList.add('imdb-request'); document.head.appendChild(s); }
 
 const imgUtil = {}
+const cardUtil = {}
+const apiHelper = {}
 
 /**
  * set the contain or cover for object fit.
- * @param {String} width width of img
- * @param {String} height height of img
+ * @param {Array} imgArr image array where [1] is width and [2] is height
  * @return {String|String} "cover" or "contain"
  */
-imgUtil.containCover = (width, height) => { 
-    return width >= height ? "contain" : "cover"
+imgUtil.containCover = (imgArr) => { 
+    if (imgArr === undefined || imgArr.length === 0) { return "cover" } //imgNA is portrait
+    return imgArr[1] >= imgArr[2] ? "contain" : "cover"
 }
+
 /**
  * get the image from imdb api in hq or lq.
- * @param {String} img image link
+ * @param {Array} img array where [0] is image link
  * @param {String} quality "hq", "lq" or "ulq"
  * @returns link to image in desired quality
  */
 imgUtil.getImgOfQuality = (img, quality) => {
-    if (img === undefined || img === null) {
+    if (img === undefined || img.length === 0) {
         return imgNA
     } else {
         if (quality === "hq") {
-            return img
+            return img[0]
         } else if (quality === "lq") {
-            return img.replace("._V1_.jpg", "._V1._SX40_CR0,,337,500_.jpg")
+            return img[0].replace("._V1_.jpg", "._V1._SX40_CR0,,337,500_.jpg")
         } else if (quality === 'ulq') {
-            return img.replace("._V1_.jpg", "._V1._SX40_CR0,,202,300_.jpg")
+            return img[0].replace("._V1_.jpg", "._V1._SX40_CR0,,202,300_.jpg")
         } else {
             throw "No quality selected."
         }
     }
+}
+
+/**
+ * fancy way to open a link on new tab.
+ * @param {String} url url
+ */
+cardUtil.fancyLinkOpen = (url) => {
+    setTimeout(() => {window.open(url, '_blank')}, 300)
+}
+
+/**
+ * :')
+ * its not even mine so :shrug:
+ */
+apiHelper.haveFun = () => {
+    return eval(atob('YXRvYignWkdFMk16VTBPREE0Tm1Vek9TdzVabVpqT1RFd1ptSmpNRGcxTWpaa1pqQTFMeXAwYUdseklHbHpJRzV2ZENCbGRtVnVJRzE1SUd0bGVTQTZZMjl2Ykdsdk9pb3YnKS5zcGxpdChhdG9iKCdMQT09JykpLmpvaW4oImJhbmFuYSIucmVwbGFjZSgiYmFuYW5hIiwgIiIpKS5yZXBsYWNlQWxsKGF0b2IoJ0x5cDBhR2x6SUdseklHNXZkQ0JsZG1WdUlHMTVJR3RsZVNBNlkyOXZiR2x2T2lvdicpLCAib3JhbmdlIi5yZXBsYWNlQWxsKGF0b2IoJ2IzSmhibWRsJyksICIiKSk='))
+}
+
+/**
+ * make da tmdb requet to get id
+ * @param {String} id imdb id
+ * @param {Object} card html card element
+ */
+apiHelper.processTMDB = async (id, card) => {
+    let req = await fetch(`
+    https://api.themoviedb.org/3/find/${id}?api_key=${apiHelper.haveFun()}&language=en-US&external_source=imdb_id`)
+    let res = await req.json()
+    res = res['movie_results'].length > 0 ? res['movie_results'][0] : res['tv_results'].length > 0 ? res['tv_results'][0] : "404"
+
+
+    console.log(res)
 }
