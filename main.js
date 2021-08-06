@@ -80,7 +80,7 @@ function genResultCard(result) {
             <button class="matter-button-outlined ctmdb">copy ID</button>
             <hr class="hr-text csep">
             <button class="matter-button-outlined details">details</button>
-            <div class="type">${result.q !== undefined ? result.q === "feature" ? "movie" : result.q.toLowerCase() : "unknown"}</div>
+            <div class="type matter-subtitle1">${result.q !== undefined ? result.q === "feature" ? "movie" : result.q.toLowerCase() : "unknown"}</div>
         </div>
         <a href="${`https://imdb.com/title/${result.id}/`}" hidden class="poster-open" target="_blank">view on imdb</a>
     </div>

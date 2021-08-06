@@ -158,7 +158,15 @@ body, html {
 }
 .type { 
     grid-area: 1 / 1 / 2 / 3;
-    width: 100%;
+    width: min-content;
+    white-space: nowrap;
+    padding: 0.1rem 0.5rem;
+    border-radius: 100rem;
+    font-weight:500;
+    color: var(--fg-rosebox);
+    font-family: var(--matter-font-family,"Roboto","Segoe UI",BlinkMacSystemFont,system-ui,-apple-system);
+    border: 1px solid;
+    border-color: rgba(var(--matter-onsurface-rgb,0,0,0),.24);
 }
 .poster:hover .poster-img {
     filter: blur(0.8rem);
