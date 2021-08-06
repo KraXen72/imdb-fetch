@@ -159,3 +159,8 @@ body, html {
 .poster:hover {
     overflow: hidden;
 }
+#copyinp {
+    opacity: 0;
+    position: absolute;
+    top: -100px;
+}

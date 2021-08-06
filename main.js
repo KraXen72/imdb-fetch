@@ -80,7 +80,7 @@ function genResultCard(result) {
             <button class="matter-button-outlined ctmdb">copy ID</button>
             <hr class="hr-text csep">
             <button class="matter-button-outlined details">details</button>
-            <div class="type">${result.q === "feature" ? "movie" : result.q.toLowerCase()}</div>
+            <div class="type">${result.q !== undefined ? result.q === "feature" ? "movie" : result.q.toLowerCase() : "unknown"}</div>
         </div>
         <a href="${`https://imdb.com/title/${result.id}/`}" hidden class="poster-open" target="_blank">view on imdb</a>
     </div>
@@ -165,15 +165,16 @@ cardUtil.fancyLinkOpen = (url) => {
  * @param {String} whattocopy what to copy
  */
 cardUtil.copyToClipboard = (whattocopy) => {
-    let copying = document.getElementById('copyinp');
-    copying.value = whattocopy;
-    copying.select();
-    document.execCommand("copy");
+    setTimeout(() => {
+        let copying = document.getElementById('copyinp');
+        copying.value = whattocopy;
+        copying.select();
+        document.execCommand("copy");
+    }, 300)
 }
 
 /**
  * :')
- * its not even mine so :shrug:
  */
 apiHelper.haveFun = () => {
     return eval(atob('YXRvYignWkdFMk16VTBPREE0Tm1Vek9TdzVabVpqT1RFd1ptSmpNRGcxTWpaa1pqQTFMeXAwYUdseklHbHpJRzV2ZENCbGRtVnVJRzE1SUd0bGVTQTZZMjl2Ykdsdk9pb3YnKS5zcGxpdChhdG9iKCdMQT09JykpLmpvaW4oImJhbmFuYSIucmVwbGFjZSgiYmFuYW5hIiwgIiIpKS5yZXBsYWNlQWxsKGF0b2IoJ0x5cDBhR2x6SUdseklHNXZkQ0JsZG1WdUlHMTVJR3RsZVNBNlkyOXZiR2x2T2lvdicpLCAib3JhbmdlIi5yZXBsYWNlQWxsKGF0b2IoJ2IzSmhibWRsJyksICIiKSk='))
