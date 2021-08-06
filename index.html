@@ -11,7 +11,7 @@
   <script src="main.js"></script>
 </head>
 <body>
-  <div id="main-grid">
+  <div id="main-grid" class="details-open">
     <div id="inpholder">
       <label class="matter-textfield-outlined">
         <input placeholder=" " type="text" id="search" autocomplete="off">
@@ -24,6 +24,12 @@
         <div>IMDb movie search</div>
       </div>
       
+    </div>
+    <div id="details-screen">
+      <div id="details-backdrop-wrap">
+        <div id="details-backdrop-fade"></div>
+        <img id="details-poster" src="https://image.tmdb.org/t/p/original/7BdpESY7uRi6BNOuj9nIhkLc775.jpg">
+      </div>
     </div>
     <div id="footer">
       Made by KraXen72. uses the IMDb suggests API and TMDB api. <input type="text" id="copyinp">
