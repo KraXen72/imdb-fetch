@@ -106,6 +106,7 @@ function genResultCard(result) {
 
     //button onclicks. details and copy tba
     rCard.querySelector('.vimdb').onclick = () => {cardUtil.fancyLinkOpen(`https://imdb.com/title/${result.id}/`)}
+    rCard.querySelector('.cimdb').onclick = () => {cardUtil.copyToClipboard(result.id)}
 
     resultsDiv.appendChild(rCard)
 
@@ -160,6 +161,17 @@ cardUtil.fancyLinkOpen = (url) => {
 }
 
 /**
+ * copy a string to clipboard
+ * @param {String} whattocopy what to copy
+ */
+cardUtil.copyToClipboard = (whattocopy) => {
+    let copying = document.getElementById('copyinp');
+    copying.value = whattocopy;
+    copying.select();
+    document.execCommand("copy");
+}
+
+/**
  * :')
  * its not even mine so :shrug:
  */
@@ -196,6 +208,7 @@ apiHelper.processTMDB = async (imdbres, card) => {
         return false
     }
     viewbtn.onclick = () => {cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${res.id}`)}
+    copybtn.onclick = () => {cardUtil.copyToClipboard(res.id)}
 
     //TODO upgrade hq images from tmdb and also in details screen.
     console.log(res)
