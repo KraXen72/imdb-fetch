@@ -123,9 +123,9 @@ body, html {
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template: min-content min-content 1fr min-content min-content / 1fr 1fr;
-    grid-gap: 0.2rem;
-    padding: 0.2rem
+    grid-template: min-content 1fr min-content  min-content min-content min-content / 1fr 1fr;
+    grid-gap: 0.3rem;
+    padding: 0.3rem
 }
 .card-hover button {
     --matter-helper-theme: 165, 117, 98;
@@ -134,15 +134,28 @@ body, html {
     background: #262626de;
 }
 .poster:hover .card-hover, .card-hover:hover {
-    opacity: 1
+    opacity: 1;
 }
-.vimdb { grid-area: 1 / 1 / 2 / 2}
-.cimdb { grid-area: 1 / 2 / 2 / 3}
-.vtmdb { grid-area: 2 / 1 / 3 / 2}
-.ctmdb { grid-area: 2 / 2 / 3 / 3}
-.type { grid-area: 4 / 1 / 5 / 3}
-.details { grid-area: 5 / 1 / 6 / 3; }
 
-.type {
+.vimdb { grid-area: 3 / 1 / 4 / 2}
+.cimdb { grid-area: 3 / 2 / 4 / 3}
+.vtmdb { grid-area: 4 / 1 / 5 / 2}
+.ctmdb { grid-area: 4 / 2 / 5 / 3}
+.details { grid-area: 6 / 1 / 7 / 3; }
+.hr-text.csep { 
+    grid-area: 5 / 1 / 6 / 3;
+    margin: 0;
+    line-height: .5rem;
+    height: .5rem;
+}
+.type { 
+    grid-area: 1 / 1 / 2 / 3;
     width: 100%;
+}
+.poster:hover .poster-img {
+    filter: blur(0.8rem);
+    -webkit-filter: blur(0.8rem);
+}
+.poster:hover {
+    overflow: hidden;
 }

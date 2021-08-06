@@ -78,8 +78,9 @@ function genResultCard(result) {
             <button class="matter-button-outlined cimdb">copy ID</button>
             <button class="matter-button-outlined vtmdb">tmdb</button>
             <button class="matter-button-outlined ctmdb">copy ID</button>
+            <hr class="hr-text csep">
             <button class="matter-button-outlined details">details</button>
-            <div class="type">${result.q === "feature" ? "Movie" : result.q}</div>
+            <div class="type">${result.q === "feature" ? "movie" : result.q.toLowerCase()}</div>
         </div>
         <a href="${`https://imdb.com/title/${result.id}/`}" hidden class="poster-open" target="_blank">view on imdb</a>
     </div>
@@ -103,14 +104,12 @@ function genResultCard(result) {
         lq.onload = ""
     }
 
-    /*button onclicks*/
+    //button onclicks. details and copy tba
     rCard.querySelector('.vimdb').onclick = () => {cardUtil.fancyLinkOpen(`https://imdb.com/title/${result.id}/`)}
-    
 
-    
     resultsDiv.appendChild(rCard)
 
-    apiHelper.processTMDB(result.id, rCard)
+    apiHelper.processTMDB(result, rCard) //tmdb onclicks get applied after append
 
 }
 
@@ -170,15 +169,34 @@ apiHelper.haveFun = () => {
 
 /**
  * make da tmdb requet to get id
- * @param {String} id imdb id
+ * @param {String} imdbres imdb result
  * @param {Object} card html card element
  */
-apiHelper.processTMDB = async (id, card) => {
+apiHelper.processTMDB = async (imdbres, card) => {
     let req = await fetch(`
-    https://api.themoviedb.org/3/find/${id}?api_key=${apiHelper.haveFun()}&language=en-US&external_source=imdb_id`)
+    https://api.themoviedb.org/3/find/${imdbres.id}?api_key=${apiHelper.haveFun()}&language=en-US&external_source=imdb_id`)
     let res = await req.json()
-    res = res['movie_results'].length > 0 ? res['movie_results'][0] : res['tv_results'].length > 0 ? res['tv_results'][0] : "404"
+    let restype = ''
+    if (res['movie_results'].length > 0 && imdbres.q.toLowerCase() === 'feature') {
+        res = res['movie_results'][0];
+        restype = 'movie'
+    } else if (res['tv_results'].length > 0 && imdbres.q.toLowerCase() === 'tv series' ) {
+        res = res['tv_results'][0];
+        restype = 'tv'
+    } else {
+        res = "404"
+    }
 
+    const copybtn = card.querySelector('.ctmdb')
+    const viewbtn = card.querySelector('.vtmdb')
 
+    if (res === "404") {
+        copybtn.setAttribute('disabled', "")
+        viewbtn.setAttribute('disabled', "")
+        return false
+    }
+    viewbtn.onclick = () => {cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${res.id}`)}
+
+    //TODO upgrade hq images from tmdb and also in details screen.
     console.log(res)
 }
