@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById("results").innerHTML = `<div id="nothing"><img src="dude_chillin.svg" alt="" draggable="false"><div>IMDb movie search</div></div>`
         }
     })
+
+    document.getElementById('details-x-button').onclick = () => {
+        document.getElementById('main-grid').classList.remove('details-open')
+        document.getElementById('details-screen').setAttribute('hidden', 'true')
+    }
 })
 
 //don't spam api, only do request after 300ms of not typing.
