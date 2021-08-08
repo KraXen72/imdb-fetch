@@ -121,7 +121,7 @@ async function renderDetails(info, card, restype) {
 
     let details = document.getElementById('details-screen')
 
-    update('details-title', getTitle())
+    update('details-title', getTitle("full"))
     update('details-genres', genrePills(obj.genres))
     update('details-type-length', getDetailsLength());
     update('details-overview', obj.overview)
@@ -132,7 +132,30 @@ async function renderDetails(info, card, restype) {
     document.getElementById('main-grid').classList.add('details-open')
     details.removeAttribute('hidden')
 
+    document.getElementById('pluggedin').onclick = ""
+    document.getElementById('pluggedin').onclick = () => {cardUtil.fancyLinkOpen(`https://www.pluggedin.com/?s=${getTitle("plain")}`)}
+
+    document.getElementById('trailerbtn').onclick = ""
+    document.getElementById('trailerbtn').onclick = () => {cardUtil.fancyLinkOpen(`https://www.youtube.com/results?search_query=${getTitle("plain").toLowerCase().replaceAll(" ","+")}+trailer`)}
+
+    console.log(obj.vote_average)
+    if (obj.vote_average < 6) {
+        console.log("bad")
+        document.getElementById('score').classList.remove("good-score")
+        document.getElementById('score').classList.add("bad-score")
+    } else if (obj.vote_average >= 6 && obj.vote_average < 8) {
+        console.log("normal")
+        document.getElementById('score').classList.remove("good-score")
+        document.getElementById('score').classList.remove("bad-score")
+    } else if (obj.vote_average >= 8) {
+        console.log("good")
+        document.getElementById('score').classList.remove("bad-score")
+        document.getElementById('score').classList.add("good-score")
+    }
+
     // helper functions
+
+    //TODO put helper functions into an objet and pass them all stuff
     function updateImages() {
         let detposter =  document.getElementById('details-poster')
         let dethead = document.getElementById('details-header')
@@ -213,8 +236,13 @@ async function renderDetails(info, card, restype) {
             return `${obj.seasons.length}, ${obj.seasons.map(s => `<span title="${s.name}">[${s.episode_count}]</span>`).join(', ')}`
         }
     }
-    function getTitle() {
-        return `${restype === 'movie' ? obj.title : restype === 'tv' ? obj.name : "couldn't get title.."} <span id="details-year">(${card.querySelector('.year').textContent})</span>`
+    function getTitle(mode) {
+        if (mode === "full") {
+            return `${restype === 'movie' ? obj.title : restype === 'tv' ? obj.name : "couldn't get title.."} <span id="details-year">(${card.querySelector('.year').textContent})</span>`
+        } else if (mode === "plain") {
+            return `${restype === 'movie' ? obj.title : restype === 'tv' ? obj.name : ""}`
+        }
+        
     }
 }
 
@@ -291,7 +319,6 @@ apiHelper.haveFun = () => {
  */
 apiHelper.processTMDB = async (imdbres, card) => {
     let res = {'movie_results': [], 'tv_results': []} //remove this on internet
-    //TODO uncomment this
     let req = await fetch(`
     https://api.themoviedb.org/3/find/${imdbres.id}?api_key=${apiHelper.haveFun()}&language=en-US&external_source=imdb_id`)
     res = await req.json()
@@ -319,8 +346,5 @@ apiHelper.processTMDB = async (imdbres, card) => {
     viewbtn.onclick = () => {cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${res.id}`)}
     copybtn.onclick = () => {cardUtil.copyToClipboard(res.id)}
     
-    detbtn.onclick = () => { renderDetails({restype, "resid": res.id}, card, restype) }
-
-
-    //TODO upgrade hq images from tmdb and also in details screen.
+    detbtn.onclick = () => { renderDetails({restype, "resid": res.id, "v": imdbres.v !== undefined ? imdbres.v : "404"}, card, restype) }
 }

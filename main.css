@@ -290,8 +290,7 @@ body, html {
 #details-type-length {
     grid-area: 4 / 2 / 5 / 3;
 }
-#details-overview { /*TODO overflow ellipsis for overview*/
-    /*pass only 3 lines in js and rest ...*/
+#details-overview {
     grid-area: 5 / 2 / 6 / 3;
     max-height: 10rem;
     overflow-y: scroll;
