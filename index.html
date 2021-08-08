@@ -5,13 +5,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="" />
-  <link href="https://res.cloudinary.com/finnhvman/raw/upload/matter/matter-0.2.2.min.css" rel="stylesheet">
-  <link href="https://kraxen72.github.io/roseboxlib/roseboxlib.css" rel="stylesheet">
+  <!--<link href="https://res.cloudinary.com/finnhvman/raw/upload/matter/matter-0.2.2.min.css" rel="stylesheet">
+  <link href="https://kraxen72.github.io/roseboxlib/roseboxlib.css" rel="stylesheet">-->
+  <link rel="stylesheet" href="offline_testing/matter.css">
+  <link rel="stylesheet" href="offline_testing/roseboxlib.css">
   <link rel="stylesheet" type="text/css" href="main.css" />
   <script src="main.js"></script>
 </head>
 <body>
-  <div id="main-grid" class="details-open">
+  <div id="main-grid" class="">
     <div id="inpholder">
       <label class="matter-textfield-outlined">
         <input placeholder=" " type="text" id="search" autocomplete="off">
@@ -25,10 +27,33 @@
       </div>
       
     </div>
-    <div id="details-screen">
-      <div id="details-backdrop-wrap">
+    <div id="details-screen" hidden>
+      <div id="details-header">
         <div id="details-backdrop-fade"></div>
-        <img id="details-poster" src="https://image.tmdb.org/t/p/original/7BdpESY7uRi6BNOuj9nIhkLc775.jpg">
+        <div id="details-backdrop-fade-rest"></div>
+        <div id="details-header-content">
+          <div id="details-poster-wrapper">
+            <img id="details-poster" src="offline_testing/poster.jpg">
+          </div>
+          <h5 id="details-title" class="matter-h4">Steins;Gate<span id="details-year">(2011)</span> </h5>
+          <div id="details-genres">
+            <span class="details-genre">Comedy</span>
+            <span class="details-genre">Action</span>
+            <span class="details-genre">Adventure</span>
+            <span class="details-genre" title="Science Fiction, Fantasy">&bull;&bull;&bull;</span>
+          </div>
+          <div id="details-type-length" class="matter-subtitle1">-</div>
+          <p id="details-overview" class="matter-subtitle1">A bank teller called Guy realizes he is a background character in an open world video game called Free City that will soon go offline.</p>
+          <!-- TODO x button for details -->
+          <div id="details-rating-wrapper">
+            <span id="score" class="good-score">8.4</span>
+            <span class="details-spacer">&bull;</span>
+            <span id="details-pg">PG-13</span>
+            <button class="matter-button-outlined" id="pluggedin"><img id="pluggedinicon" title="plugged-in reviews" src="pluggedinicon.svg" alt=""></button>
+            <span class="details-spacer">&bull;</span>
+            <button class="matter-button-outlined ctmdb">See Trailer</button>
+          </div>
+        </div>
       </div>
     </div>
     <div id="footer">

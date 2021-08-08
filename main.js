@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("query: ", inp.value, "funcname: ", funcname)
 
             window[`imdb$${funcname}`] = function (results) {
-                console.log(results)
                 renderResults(results)
             };
             try { //try to delete all old imdb functions so i don't pollute window
@@ -40,24 +39,23 @@ function debounce(func, timeout = 300){
 /*ui stuff*/
 function renderResults(obj) {
     let resultsDiv = document.getElementById("results")
-    resultsDiv.innerHTML = `` 
+    resultsDiv.innerHTML = ``
+    if (obj.d !== undefined) { obj.d = obj.d.filter(result => result.id.substring(0, 2) !== "nm" && !result.id.includes('/')) }
     
     if(obj.d === undefined || obj.d.length === 0) {
         resultsDiv.innerHTML = `<div id="nothing"><img src="nothing_found.svg" alt="" draggable="false"><div>Nothing found</div></div>`
     } else {
+        console.log("cards: ", obj.d)
         for (let i = 0; i < obj.d.length; i++) {
             const result = obj.d[i];
             //only do movies, skip people
-            if (result.id.substring(0, 2) !== "nm") {
-                genResultCard(result)
-            }
+            genResultCard(result)
         }
     }
 }
 
 //get the html for a result card
 function genResultCard(result) {
-    console.log("card: ", result)
     let resultsDiv = document.getElementById("results")
 
     let rCard = document.createElement("div")
@@ -112,6 +110,112 @@ function genResultCard(result) {
 
     apiHelper.processTMDB(result, rCard) //tmdb onclicks get applied after append
 
+}
+
+async function renderDetails(info, card, restype) {
+    let url = `https://api.themoviedb.org/3/${info.restype}/${info.resid}?api_key=${apiHelper.haveFun()}&language=en-US&append_to_response=release_dates`
+    dreq = await fetch(url)
+    obj = await dreq.json()
+
+    console.log("detail fetch: ", url, obj)
+
+    let details = document.getElementById('details-screen')
+
+    update('details-title', getTitle())
+    update('details-genres', genrePills(obj.genres))
+    update('details-type-length', getDetailsLength());
+    update('details-overview', obj.overview)
+    update('score', obj.vote_average)
+    update('details-pg', getPG(obj.release_dates))
+    updateImages()
+    
+    document.getElementById('main-grid').classList.add('details-open')
+    details.removeAttribute('hidden')
+
+    // helper functions
+    function updateImages() {
+        let detposter =  document.getElementById('details-poster')
+        let dethead = document.getElementById('details-header')
+
+        if (obj.poster_path !== null) {
+            detposter.src = `https://image.tmdb.org/t/p/original/${obj.poster_path}`
+        } else {
+            detposter.src = card.querySelector('.poster-img.hq').src
+        }
+
+        if (obj.backdrop_path !== null) {
+            dethead.style.backgroundImage = `url('https://image.tmdb.org/t/p/original/${obj.backdrop_path}')`
+        } else {
+            dethead.style = ""
+            dethead.classList.add('fallback-bg')
+        }
+    }
+    function update(id,  value) {
+        document.getElementById(id).innerHTML = value
+    }
+    function genrePills(obj) {
+        let html = ''
+        let genres = obj.map(g => g.name)
+        let extragenres = []
+        if (genres.length > 3) {
+            extragenres = genres.slice(3, genres.length)
+            genres = genres.slice(0,3)
+        }
+        genres.forEach(g => {
+            html += `<span class="details-genre">${g}</span>`
+        })
+        if (extragenres.length > 0) {
+            html += `<span class="details-genre" title="${extragenres.join(', ')}">&bull;&bull;&bull;</span>`
+        }
+        return html
+    }
+    function onlyUnique(value, index, self) { 
+        return self.indexOf(value) === index;
+    }
+    function getPG(relDates) {
+        let normalratings = ['M', 'R', 'M/R', 'G', 'PG', 'PG-13', "PG-16", 'NC-17', 'MA', 'MA 15', 'R 18', 'X 18']
+        let certs
+        if (relDates !== undefined && relDates.results !== undefined) {
+            certs = [].concat.apply([], relDates.results.map(date => date.release_dates.map(rd => rd.certification))) /*get all certifications from each country, flattern the array */
+        .filter(item => item !== "")  /*filter out "",*/
+        .filter( onlyUnique ) /* filter out duplicates */
+        .map(item => { 
+            item.replaceAll("+", ""); //get rid of 16+ etc so its only 16
+            return parseInt(item) || item //try to convert to numbers
+        })
+        .filter(item => typeof item === 'number' || normalratings.includes(item) || item.includes('PG-')) //filter out all wierdass ratings
+        .sort() //sort alphabetically
+        .sort((a, b) => a - b) //try to sort from lowest
+        } else {
+            certs = []
+        }
+        if (certs.length > 0) {
+            return `<span title="${certs.join(", ")}">${typeof certs[0] === 'number' ? `PG-${certs[0]}`: certs[0]}</span>`
+        } else {
+            return `<span>PG-??</span>`
+        }
+    }
+    function getDetailsLength() {
+        let runtime = obj.runtime ?? ""
+        runtime = runtime === 0 ? "" : runtime
+        return restype === 'movie' ? `${restype.split("").map((l, i) => i === 0 ? l.toUpperCase() : l).join("")}${runtime === "" ? "": ` &bull; ${Math.floor(obj.runtime / 60)}h ${obj.runtime % 60}min`}` : 
+        restype === 'tv' ? `Tv series &bull; Seasons: ${getSeasons()}` : 
+        `${restype.split("").map((l, i) => i === 0 ? l.toUpperCase() : l).join("")}`
+    }
+    function getSeasons() {
+        let hasSpecials = false
+        let specials = {}
+        obj.seasons.forEach(season => { if (season.name.toLowerCase() === "specials") { hasSpecials = true; specials = season } })
+
+        if (hasSpecials) {
+            return `${obj.seasons.length - 1}, ${obj.seasons.filter(s => s.name.toLowerCase() !== "specials").map(s => `<span title="${s.name}">[${s.episode_count}]</span>`).join(', ')}, Specials: ${specials.episode_count}`
+        } else {
+            return `${obj.seasons.length}, ${obj.seasons.map(s => `<span title="${s.name}">[${s.episode_count}]</span>`).join(', ')}`
+        }
+    }
+    function getTitle() {
+        return `${restype === 'movie' ? obj.title : restype === 'tv' ? obj.name : "couldn't get title.."} <span id="details-year">(${card.querySelector('.year').textContent})</span>`
+    }
 }
 
 function addScript(src) { var s = document.createElement('script'); s.src = src; s.classList.add('imdb-request'); document.head.appendChild(s); }
@@ -186,11 +290,13 @@ apiHelper.haveFun = () => {
  * @param {Object} card html card element
  */
 apiHelper.processTMDB = async (imdbres, card) => {
+    let res = {'movie_results': [], 'tv_results': []} //remove this on internet
+    //TODO uncomment this
     let req = await fetch(`
     https://api.themoviedb.org/3/find/${imdbres.id}?api_key=${apiHelper.haveFun()}&language=en-US&external_source=imdb_id`)
-    let res = await req.json()
+    res = await req.json()
     let restype = ''
-    if (res['movie_results'].length > 0 && imdbres.q.toLowerCase() === 'feature') {
+    if (res['movie_results'].length > 0 && ['feature', 'tv special', 'tv movie'].includes(imdbres.q.toLowerCase())) {
         res = res['movie_results'][0];
         restype = 'movie'
     } else if (res['tv_results'].length > 0 && imdbres.q.toLowerCase() === 'tv series' ) {
@@ -200,17 +306,21 @@ apiHelper.processTMDB = async (imdbres, card) => {
         res = "404"
     }
 
-    const copybtn = card.querySelector('.ctmdb')
-    const viewbtn = card.querySelector('.vtmdb')
+    let copybtn = card.querySelector('.ctmdb')
+    let viewbtn = card.querySelector('.vtmdb')
+    let detbtn = card.querySelector('.details')
 
     if (res === "404") {
         copybtn.setAttribute('disabled', "")
         viewbtn.setAttribute('disabled', "")
+        detbtn.setAttribute('disabled', "")
         return false
     }
     viewbtn.onclick = () => {cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${res.id}`)}
     copybtn.onclick = () => {cardUtil.copyToClipboard(res.id)}
+    
+    detbtn.onclick = () => { renderDetails({restype, "resid": res.id}, card, restype) }
+
 
     //TODO upgrade hq images from tmdb and also in details screen.
-    console.log(res)
 }
