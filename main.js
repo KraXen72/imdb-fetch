@@ -138,17 +138,13 @@ async function renderDetails(info, card, restype) {
     document.getElementById('trailerbtn').onclick = ""
     document.getElementById('trailerbtn').onclick = () => {cardUtil.fancyLinkOpen(`https://www.youtube.com/results?search_query=${getTitle("plain").toLowerCase().replaceAll(" ","+")}+trailer`)}
 
-    console.log(obj.vote_average)
     if (obj.vote_average < 6) {
-        console.log("bad")
         document.getElementById('score').classList.remove("good-score")
         document.getElementById('score').classList.add("bad-score")
     } else if (obj.vote_average >= 6 && obj.vote_average < 8) {
-        console.log("normal")
         document.getElementById('score').classList.remove("good-score")
         document.getElementById('score').classList.remove("bad-score")
     } else if (obj.vote_average >= 8) {
-        console.log("good")
         document.getElementById('score').classList.remove("bad-score")
         document.getElementById('score').classList.add("good-score")
     }
