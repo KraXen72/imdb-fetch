@@ -319,15 +319,18 @@ apiHelper.haveFun = () => {
  * @param {Object} card html card element
  */
 apiHelper.processTMDB = async (imdbres, card) => {
+    const movieTypes = ['feature', 'tv special', 'tv movie']
+    const tvTypes = ['tv series', 'tv mini-series']
+
     let res = { 'movie_results': [], 'tv_results': [] } //remove this on internet
     let req = await fetch(`
     https://api.themoviedb.org/3/find/${imdbres.id}?api_key=${apiHelper.haveFun()}&language=en-US&external_source=imdb_id`)
     res = await req.json()
     let restype = ''
-    if (res['movie_results'].length > 0 && ['feature', 'tv special', 'tv movie'].includes(imdbres.q.toLowerCase())) {
+    if (res['movie_results'].length > 0 && movieTypes.includes(imdbres.q.toLowerCase())) {
         res = res['movie_results'][0];
         restype = 'movie'
-    } else if (res['tv_results'].length > 0 && imdbres.q.toLowerCase() === 'tv series') {
+    } else if (res['tv_results'].length > 0 && tvTypes.includes(imdbres.q.toLowerCase())) {
         res = res['tv_results'][0];
         restype = 'tv'
     } else {
