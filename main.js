@@ -270,17 +270,27 @@ imgUtil.containCover = (imgArr) => {
  * @returns link to image in desired quality
  */
 imgUtil.getImgOfQuality = (img, quality) => {
+    console.log(img)
+    const imageURL = img[0].replaceAll("._V1_", "$param")
+    const _constructImageQuery = (url, quality, width, height) => url.replaceAll("$param", `._V1_QL${quality}_UY${height}_CR1,0,${width},${height}`)
+    
     if (img === undefined || img.length === 0) {
         return imgNA
     } else {
-        if (quality === "hq") {
-            return img[0]
-        } else if (quality === "lq") {
-            return img[0].replace("._V1_.jpg", "._V1._SX40_CR0,,337,500_.jpg")
-        } else if (quality === 'ulq') {
-            return img[0].replace("._V1_.jpg", "._V1._SX40_CR0,,202,300_.jpg")
-        } else {
-            throw "No quality selected."
+        // for the widhts and heights here i just referenced a "srcset" for an image on imdb.com
+        switch (quality) {
+            case "hq":
+                return _constructImageQuery(imageURL, 100, 380, 562)
+                break;
+            case "lq":
+                return _constructImageQuery(imageURL, 75, 285, 422)
+                break;
+            case "ulq":
+                return _constructImageQuery(imageURL, 10, 190, 281)
+                break;
+            default:
+                throw "No quality selected."
+                break;
         }
     }
 }
