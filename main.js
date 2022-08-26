@@ -270,23 +270,28 @@ imgUtil.containCover = (imgArr) => {
  * @returns link to image in desired quality
  */
 imgUtil.getImgOfQuality = (img, quality) => {
-    console.log(img)
-    const imageURL = img[0].replaceAll("._V1_", "$param")
-    const _constructImageQuery = (url, quality, width, height) => url.replaceAll("$param", `._V1_QL${quality}_UY${height}_CR1,0,${width},${height}`)
+    if (!(Array.isArray(img))) {
+        console.error(`no 'img' array provided. attempted quality: ${quality}. typeof img: ${typeof img}`)
+        return imgNA
+    }
+    const imageURL = img[0].replaceAll("._V1_", "$param") // prepare for parameter injection
+
+    const _constructImageQuery = (url, quality, width, height, cropParam) => url.replaceAll("$param", `._V1_QL${quality}_UY${height}${cropParam}${width},${height}`)
     
     if (img === undefined || img.length === 0) {
         return imgNA
     } else {
         // for the widhts and heights here i just referenced a "srcset" for an image on imdb.com
+        console.log(img[0] ?? "undefined", quality)
         switch (quality) {
             case "hq":
-                return _constructImageQuery(imageURL, 100, 380, 562)
+                return _constructImageQuery(imageURL, 100, /*380*/1500, /*562*/1000, "_CR0,,")
                 break;
             case "lq":
-                return _constructImageQuery(imageURL, 75, 285, 422)
+                return _constructImageQuery(imageURL, 75, 285, 422, "_CR1,1,")
                 break;
             case "ulq":
-                return _constructImageQuery(imageURL, 10, 190, 281)
+                return _constructImageQuery(imageURL, 10, 190, 281, "_SX100_CR0,,")
                 break;
             default:
                 throw "No quality selected."
@@ -329,7 +334,7 @@ apiHelper.haveFun = () => {
  * @param {Object} card html card element
  */
 apiHelper.processTMDB = async (imdbres, card) => {
-    const movieTypes = ['feature', 'tv special', 'tv movie']
+    const movieTypes = ['feature', 'tv special', 'tv movie', 'short']
     const tvTypes = ['tv series', 'tv mini-series']
 
     let res = { 'movie_results': [], 'tv_results': [] } //remove this on internet
