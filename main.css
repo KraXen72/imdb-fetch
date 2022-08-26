@@ -1,4 +1,4 @@
-* {
+:root, * {
     box-sizing: border-box !important;
     outline: 0px solid transparent !important;
     --matter-helper-theme: 165, 117, 98;
@@ -110,23 +110,21 @@ body, html {
     align-items: center;
     justify-content: center;
     height: var(--card-height);
-    width: 100%;
+    width: min-content;
     background: var(--bg-primary);
     border-radius: 0.5rem !important;
     position: relative;
 }
+/* poster aspect ratio should be 2:3 (because i said so) */
 .poster-img {
-    height: var(--card-height);
-    width: 100%;
     border-radius: 0.5rem !important;
-    object-fit: cover;
+    height: 100%;
+    aspect-ratio: 2/3;
 }
-.contain {
+.contain { /* for landscape images */ 
     object-fit: contain !important;
 }
-.cover {
-    object-fit: cover !important;
-}
+/* removed the cover class as it was unneeded */
 .poster-open {
     position: absolute;
     background: #262626be;
