@@ -10,3 +10,4 @@ also has mobile ui:
   
 it's not perfect, only gives like ~10 results because it uses imdb's official Suggest json-p api, rather than OMDBapi.  
 - update featuring OMDBapi integration and svelte rewrite coming ***soon™***
+- thanks to [this pen on codepen](https://codepen.io/magdielikari/pen/KKmmjWo) for circular progress

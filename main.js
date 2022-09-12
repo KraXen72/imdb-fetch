@@ -130,7 +130,6 @@ async function renderDetails(info, card, restype) {
     update('details-genres', genrePills(obj.genres))
     update('details-type-length', getDetailsLength());
     update('details-overview', obj.overview)
-    update('score', obj.vote_average)
     update('details-pg', getPG(obj.release_dates))
     updateImages()
 
@@ -143,16 +142,24 @@ async function renderDetails(info, card, restype) {
     document.getElementById('trailerbtn').onclick = ""
     document.getElementById('trailerbtn').onclick = () => { cardUtil.fancyLinkOpen(`https://www.youtube.com/results?search_query=${getTitle("plain").toLowerCase().replaceAll(" ", "+")}+trailer`) }
 
-    if (obj.vote_average < 6) {
-        document.getElementById('score').classList.remove("good-score")
-        document.getElementById('score').classList.add("bad-score")
-    } else if (obj.vote_average >= 6 && obj.vote_average < 8) {
-        document.getElementById('score').classList.remove("good-score")
-        document.getElementById('score').classList.remove("bad-score")
-    } else if (obj.vote_average >= 8) {
-        document.getElementById('score').classList.remove("bad-score")
-        document.getElementById('score').classList.add("good-score")
-    }
+	const scoreVal = obj.vote_average
+    let percScore = Number(Math.round(scoreVal * 10).toFixed(0))
+	const circProgress = document.querySelector(".circular-progress")
+	console.log(typeof scoreVal, scoreVal)
+
+	
+	if (scoreVal === 0 || scoreVal === null) {
+		circProgress.dataset.feel = "null"
+	} else if (scoreVal >= 7) {
+		circProgress.dataset.feel = "great"
+	} else if (scoreVal < 7 && scoreVal >= 5) {
+		circProgress.dataset.feel = "good"
+	} else if (scoreVal < 5) {
+		circProgress.dataset.feel = "bad"
+	}
+
+    update('score', percScore === 0 ? "" : percScore)
+    updateScoreCircle(percScore)
 
     // helper functions
 
@@ -176,6 +183,10 @@ async function renderDetails(info, card, restype) {
     }
     function update(id, value) {
         document.getElementById(id).innerHTML = value
+    }
+    function updateScoreCircle(value) {
+        const p = ( 1 - value / 100 ) * (2 * Math.PI * 40); // 40 is the radius of the circle
+        document.getElementById("svg-progress-indicator").style.strokeDashoffset = p
     }
     function genrePills(obj) {
         let html = ''

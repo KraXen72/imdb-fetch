@@ -46,7 +46,21 @@
           <div id="details-type-length" class="matter-subtitle1 details-right">-</div>
           <p id="details-overview" class="matter-subtitle1 details-right">A bank teller called Guy realizes he is a background character in an open world video game called Free City that will soon go offline.</p>
           <div id="details-rating-wrapper" class="details-right">
-            <span id="score" title="This rating is not very objective, because it's audience rating from tmdb. Better to check imdb for actual rating.">8.4</span>
+            <div class="circular-progress" id="score-hold">
+              <span id="score-text">
+                <span id="score">100</span>
+                <span id="score-percent">%</span>
+              </span>
+              <svg 
+                id="score-svg"
+                xmlns='http://www.w3.org/2000/svg'
+                viewBox='0 0 100 100'
+                aria-labelledby='title' role='graphic'>
+                <title id='title'>svg circular progress bar</title>
+                <circle cx="50" cy="50" r="40" ></circle>
+                <circle cx="50" cy="50" r="40" id='svg-progress-indicator'></circle>
+              </svg>
+            </div>
             <span class="details-spacer">&bull;</span>
             <span id="details-pg">PG-13</span>
             <button class="matter-button-outlined" id="pluggedin"><img id="pluggedinicon" title="plugged-in reviews" src="pluggedinicon.svg" alt=""></button>

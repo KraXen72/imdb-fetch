@@ -1,4 +1,5 @@
-:root, * {
+:root,
+* {
     box-sizing: border-box !important;
     outline: 0px solid transparent !important;
     --matter-helper-theme: 165, 117, 98;
@@ -6,7 +7,8 @@
 
     --card-height: 15rem;
 }
-body, html {
+body,
+html {
     padding: 0 !important;
     margin: 0 !important;
 }
@@ -40,7 +42,9 @@ body, html {
     #main-grid.details-open #footer {
         grid-column: 1 / 2;
     }
-    #main-grid.details-open #results {display: none;}
+    #main-grid.details-open #results {
+        display: none;
+    }
     #main-grid.details-open {
         grid-template-columns: 1fr;
         padding-left: 0px;
@@ -77,8 +81,6 @@ body, html {
     }
 }
 
-
-
 #results {
     grid-row: 2 / 3;
     background: var(--bg-secondary);
@@ -91,7 +93,8 @@ body, html {
     flex-wrap: wrap;
 }
 
-#search, #inpholder label {
+#search,
+#inpholder label {
     width: 100%;
 }
 /*result card*/
@@ -121,7 +124,8 @@ body, html {
     height: 100%;
     aspect-ratio: 2/3;
 }
-.contain { /* for landscape images */ 
+.contain {
+    /* for landscape images */
     object-fit: contain !important;
 }
 /* removed the cover class as it was unneeded */
@@ -149,7 +153,8 @@ body, html {
     white-space: nowrap;
     text-overflow: ellipsis;
 }
-#footer, #nothing {
+#footer,
+#nothing {
     color: gray;
     text-align: center;
     padding-top: 1rem;
@@ -174,43 +179,54 @@ body, html {
     width: 100%;
     height: 100%;
     display: grid;
-    grid-template: min-content 1fr min-content  min-content min-content min-content / 1fr 1fr;
+    grid-template: min-content 1fr min-content min-content min-content min-content / 1fr 1fr;
     grid-gap: 0.3rem;
-    padding: 0.3rem
+    padding: 0.3rem;
 }
-.card-hover button, #details-rating-wrapper button {
+.card-hover button,
+#details-rating-wrapper button {
     --matter-helper-theme: 165, 117, 98;
     --matter-onsurface-rgb: 163, 165, 170;
     white-space: nowrap;
     background: #262626de;
 }
-.poster:hover .card-hover, .card-hover:hover {
+.poster:hover .card-hover,
+.card-hover:hover {
     opacity: 1;
 }
 
-
-.vimdb { grid-area: 3 / 1 / 4 / 2}
-.cimdb { grid-area: 3 / 2 / 4 / 3}
-.vtmdb { grid-area: 4 / 1 / 5 / 2}
-.ctmdb { grid-area: 4 / 2 / 5 / 3}
-.details { grid-area: 6 / 1 / 7 / 3; }
-.hr-text.csep { 
+.vimdb {
+    grid-area: 3 / 1 / 4 / 2;
+}
+.cimdb {
+    grid-area: 3 / 2 / 4 / 3;
+}
+.vtmdb {
+    grid-area: 4 / 1 / 5 / 2;
+}
+.ctmdb {
+    grid-area: 4 / 2 / 5 / 3;
+}
+.details {
+    grid-area: 6 / 1 / 7 / 3;
+}
+.hr-text.csep {
     grid-area: 5 / 1 / 6 / 3;
     margin: 0;
-    line-height: .5rem;
-    height: .5rem;
+    line-height: 0.5rem;
+    height: 0.5rem;
 }
-.type { 
+.type {
     grid-area: 1 / 1 / 2 / 3;
     width: min-content;
     white-space: nowrap;
     padding: 0.1rem 0.5rem;
     border-radius: 100rem;
-    font-weight:500;
+    font-weight: 500;
     color: var(--fg-rosebox);
-    font-family: var(--matter-font-family,"Roboto","Segoe UI",BlinkMacSystemFont,system-ui,-apple-system);
+    font-family: var(--matter-font-family, "Roboto", "Segoe UI", BlinkMacSystemFont, system-ui, -apple-system);
     border: 1px solid;
-    border-color: rgba(var(--matter-onsurface-rgb,0,0,0),.24);
+    border-color: rgba(var(--matter-onsurface-rgb, 0, 0, 0), 0.24);
 }
 .poster:hover .poster-img {
     filter: blur(0.8rem);
@@ -239,22 +255,22 @@ body, html {
     border-radius: 1rem;
 }
 #details-header {
-    position: relative; 
+    position: relative;
     width: 100%;
     background-repeat: no-repeat;
     background-position: top;
     background-size: contain;
     border-radius: 1rem 1rem 0 0;
 }
-#details-x-button span{
-   filter: drop-shadow(0px 0px 0.5rem black);
-   color: white;
-   cursor: pointer;
-   user-select: none;
-   z-index: 4;
+#details-x-button span {
+    filter: drop-shadow(0px 0px 0.5rem black);
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    z-index: 4;
 }
 .fallback-bg {
-    background-image: url('fallback-bg.png')
+    background-image: url("fallback-bg.png");
 }
 #details-header-content {
     display: grid;
@@ -271,7 +287,7 @@ body, html {
 #details-backdrop {
     width: 100%;
     max-height: 20rem;
-    opacity: .4;
+    opacity: 0.4;
     grid-area: 1 / 1 / 4 / 3;
 }
 #details-backdrop-fade {
@@ -287,9 +303,9 @@ body, html {
     height: 100%;
     top: 20rem;
     background: var(--bg-secondary);
-    z-index:2;
+    z-index: 2;
     width: 100%;
-    max-height: calc( 100% - 19rem );
+    max-height: calc(100% - 19rem);
 }
 #details-poster-wrapper {
     grid-area: 2 / 1 / 7 / 2;
@@ -311,15 +327,15 @@ body, html {
 }
 #details-x-button {
     grid-row: 1/2;
-    grid-column: 1/2
+    grid-column: 1/2;
 }
 #details-year {
-    opacity: .5;
+    opacity: 0.5;
     font-weight: 400;
 }
 #details-genres {
     grid-area: 3 / 2 / 4 / 3;
-    display:flex;
+    display: flex;
     flex-wrap: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -330,11 +346,11 @@ body, html {
 .details-genre {
     padding: 0.1rem 0.5rem;
     border-radius: 100rem;
-    font-weight:500;
+    font-weight: 500;
     color: var(--fg-rosebox);
-    font-family: var(--matter-font-family,"Roboto","Segoe UI",BlinkMacSystemFont,system-ui,-apple-system);
+    font-family: var(--matter-font-family, "Roboto", "Segoe UI", BlinkMacSystemFont, system-ui, -apple-system);
     border: 1px solid;
-    border-color: rgba(var(--matter-onsurface-rgb,0,0,0),.24);
+    border-color: rgba(var(--matter-onsurface-rgb, 0, 0, 0), 0.24);
     margin: 0.1rem;
     white-space: nowrap;
 }
@@ -354,34 +370,13 @@ body, html {
     display: flex;
     align-items: center;
 }
-#score {
-    font-size: 1.2rem;
-    font-family: var(--matter-font-family,"Roboto","Segoe UI",BlinkMacSystemFont,system-ui,-apple-system);
-    border-radius: 100%;
-    padding: 0.3rem;
-    border: 1px solid;
-    width: 2.5rem;
-    height: 2.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 2px solid;
-    border-color: rgba(var(--matter-onsurface-rgb,0,0,0),.24);
-    font-weight: 500;
-}
-.bad-score {
-    border-color: darkred !important;
-}
-.good-score {
-    border-color: darkgreen !important;;
-}
 .details-spacer {
     margin: 0 0.5rem;
 }
 #details-pg {
     padding: 0.5rem;
     border: 1px solid;
-    border-color: rgba(var(--matter-onsurface-rgb,0,0,0),.24);
+    border-color: rgba(var(--matter-onsurface-rgb, 0, 0, 0), 0.24);
     border-radius: 5px;
     height: 36px;
     display: flex;
@@ -398,8 +393,81 @@ body, html {
 #pluggedinicon {
     height: 100%;
     width: auto;
-    opacity: 0.8
+    opacity: 0.8;
 }
 #pluggedinicon path {
     fill: rgb(0, 100, 0);
+}
+
+#score-hold {
+	display: grid;
+	place-items: center;
+	grid-template: 1fr / 1fr;
+	grid-template-areas: "score";
+}
+
+/* score */
+#score-text {
+    font-size: 1.5rem;
+	line-height: 1.5rem;
+    font-family: var(--matter-font-family, "Roboto", "Segoe UI", BlinkMacSystemFont, system-ui, -apple-system);
+	font-weight: 500;
+
+	background: transparent;
+    height: min-content;
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+	grid-area: score;
+}
+#score-percent {
+	font-size: 1rem;
+	line-height: 1.5rem;
+}
+
+/* score circle */
+:root {
+    --PI: 3.14159265358979;
+    --circle-circumstance: calc(2 * var(--PI) * 40);
+}
+#score-svg {
+    width: 80px;
+    height: 80px;
+}
+
+.circular-progress[data-feel="bad"] {
+	color: #cc3c3c;
+}
+.circular-progress[data-feel="good"] {
+	color: rgb(67, 153, 67);
+}
+.circular-progress[data-feel="great"] {
+	color: rgb(0, 214, 0);
+}
+.circular-progress[data-feel="null"] {
+	color: rgba(var(--matter-onsurface-rgb, 0, 0, 0), 0.24);
+}
+
+.circular-progress svg {
+    transform: rotate(270deg);
+	grid-area: score;
+	pointer-events: none;
+}
+.circular-progress circle {
+    stroke-width: 5;
+    fill: none;
+    stroke-linecap: round;
+}
+.circular-progress circle:nth-of-type(1) {
+    stroke: rgba(var(--matter-onsurface-rgb, 0, 0, 0), 0.24);
+}
+.circular-progress circle:nth-of-type(2) {
+    stroke: currentColor;
+    stroke-dasharray: var(--circle-circumstance);
+
+    /* here we multiply the circle circumstance by an opposite number of what we want it to present */
+    /* so here we want it to present 70% which means 0.7 and the opposite of that is 0.3 ( 1 - 0.7 ) */
+    stroke-dashoffset: (0 * var(--circle-circumstance));
 }
