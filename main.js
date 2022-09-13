@@ -229,12 +229,20 @@ async function renderDetails(info, card, restype) {
             return `<span>PG-??</span>`
         }
     }
+	
     function getDetailsLength() {
-        let runtime = obj.runtime ?? ""
-        runtime = runtime === 0 ? "" : runtime
-        return restype === 'movie' ? `${restype.split("").map((l, i) => i === 0 ? l.toUpperCase() : l).join("")}${runtime === "" ? "" : ` &bull; ${Math.floor(obj.runtime / 60)}h ${obj.runtime % 60}min`}` :
-            restype === 'tv' ? `Tv series &bull; Seasons: ${getSeasons()}` :
-                `${restype.split("").map((l, i) => i === 0 ? l.toUpperCase() : l).join("")}`
+		let runtime = obj.runtime ?? ""
+		runtime = runtime === 0 ? "" : runtime
+		const type = restype === 'movie' ? 'Movie' : restype === 'tv' ? 'Tv series' : 'Other'
+
+		if (restype === 'movie') {
+			const movieLength  = `${Math.floor(obj.runtime / 60)}h ${obj.runtime % 60}min`
+			return `${type} &bull; ${movieLength}`
+		} else if (restype === 'tv') {
+			return `${type} &bull; ${getSeasons()}`
+		} else {
+			return `Other &bull; No info`
+		}
     }
     function getSeasons() {
         let hasSpecials = false
