@@ -159,6 +159,7 @@ async function renderDetails(info, card, restype) {
 	}
 
     update('score', percScore === 0 ? "" : percScore)
+	if (obj.vote_count && obj.vote_count >= 0) document.getElementById("score").title = `${obj.vote_count} people rated`
     updateScoreCircle(percScore)
 
     // helper functions
