@@ -128,9 +128,9 @@ async function renderDetails(info, card, restype) {
 
     update('details-title', getTitle("full"))
     update('details-genres', genrePills(obj.genres))
-    update('details-type-length', getDetailsLength());
+    update('details-type-length', getDetailsLength(`<span id="details-pg">${getPG(obj.release_dates)}</span>`));
     update('details-overview', obj.overview)
-    update('details-pg', getPG(obj.release_dates))
+    // update('details-pg', getPG(obj.release_dates))
     updateImages()
 
     document.getElementById('main-grid').classList.add('details-open')
@@ -230,18 +230,18 @@ async function renderDetails(info, card, restype) {
         }
     }
 	
-    function getDetailsLength() {
+    function getDetailsLength(prepend = '') {
 		let runtime = obj.runtime ?? ""
 		runtime = runtime === 0 ? "" : runtime
 		const type = restype === 'movie' ? 'Movie' : restype === 'tv' ? 'Tv series' : 'Other'
 
 		if (restype === 'movie') {
-			const movieLength  = `${Math.floor(obj.runtime / 60)}h ${obj.runtime % 60}min`
-			return `${type} &bull; ${movieLength}`
+			const movieLength  = `${Math.floor(runtime / 60)}h ${runtime % 60}min`
+			return `${prepend}<strong>${type}</strong> &bull; ${movieLength}`
 		} else if (restype === 'tv') {
-			return `${type} &bull; ${getSeasons()}`
+			return `${prepend}<strong>${type}</strong> &bull; <strong>Seasons:</strong> ${getSeasons()}`
 		} else {
-			return `Other &bull; No info`
+			return `${prepend}Other &bull; No info`
 		}
     }
     function getSeasons() {
@@ -250,9 +250,13 @@ async function renderDetails(info, card, restype) {
         obj.seasons.forEach(season => { if (season.name.toLowerCase() === "specials") { hasSpecials = true; specials = season } })
 
         if (hasSpecials) {
-            return `${obj.seasons.length - 1}, ${obj.seasons.filter(s => s.name.toLowerCase() !== "specials").map(s => `<span title="${s.name}">[${s.episode_count}]</span>`).join(', ')}, Specials: ${specials.episode_count}`
+			const seasons = obj.seasons.filter(s => s.name.toLowerCase() !== "specials")
+				.filter(season => season.name.trim() !== "")
+				.map(s => `<span title="${s.name}">[${s.episode_count}]</span>`)
+				.join(', ')
+            return `${obj.seasons.length - 1}: ${seasons} &bull; <strong>Specials:</strong> ${specials.episode_count}`
         } else {
-            return `${obj.seasons.length}, ${obj.seasons.map(s => `<span title="${s.name}">[${s.episode_count}]</span>`).join(', ')}`
+            return `${obj.seasons.length}: ${obj.seasons.map(s => `<span title="${s.name}">[${s.episode_count}]</span>`).join(', ')}`
         }
     }
     function getTitle(mode) {
