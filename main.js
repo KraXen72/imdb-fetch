@@ -163,7 +163,6 @@ async function renderDetails(info, card, restype) {
 
     // helper functions
 
-    //TODO put helper functions into an objet and pass them all stuff
     function updateImages() {
         let detposter = document.getElementById('details-poster')
         let dethead = document.getElementById('details-header')
