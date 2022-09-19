@@ -45,7 +45,13 @@ function debounce(func, timeout = 300) {
 function renderResults(obj) {
     let resultsDiv = document.getElementById("results")
     resultsDiv.innerHTML = ``
-    if (obj.d !== undefined) { obj.d = obj.d.filter(result => result.id.substring(0, 2) !== "nm" && !result.id.includes('/')) }
+    if (obj.d !== undefined) { 
+		obj.d = obj.d.filter(result => {
+			return result.id.slice(0, 2) !== "nm" 
+			&& !result.id.includes('/')
+			&& !result.qid !== "musicvideo"
+		}) 
+	}
 
     if (obj.d === undefined || obj.d.length === 0) {
         resultsDiv.innerHTML = `<div id="nothing"><img src="nothing_found.svg" alt="" draggable="false"><div>Nothing found</div></div>`
@@ -357,7 +363,7 @@ apiHelper.haveFun = () => {
  * @param {Object} card html card element
  */
 apiHelper.processTMDB = async (imdbres, card) => {
-    const movieTypes = ['feature', 'tv special', 'tv movie', 'short']
+    const movieTypes = ['feature', 'tv special', 'tv movie', 'short', 'movie']
     const tvTypes = ['tv series', 'tv mini-series']
 
     let res = { 'movie_results': [], 'tv_results': [] } //remove this on internet
