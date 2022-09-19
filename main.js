@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     inp.onkeydown = debounce(() => { //search query
         if (inp.value !== "") {
-            let funcname = inp.value.toString().replaceAll(' ', "_").replaceAll('-', "_").toLowerCase()
+            let funcname = encodeURIComponent(inp.value.toString().trim().replaceAll("%20", " ").replaceAll(' ', "_").replaceAll('-', "_").toLowerCase())
             console.log("query: ", inp.value, "funcname: ", funcname)
 
             window[`imdb$${funcname}`] = function (results) {
@@ -300,7 +300,7 @@ imgUtil.containCover = (imgArr) => {
  */
 imgUtil.getImgOfQuality = (img, quality) => {
     if (!(Array.isArray(img))) {
-        console.error(`no 'img' array provided. attempted quality: ${quality}. typeof img: ${typeof img}`)
+        //console.error(`no 'img' array provided. attempted quality: ${quality}. typeof img: ${typeof img}`)
         return imgNA
     }
     const imageURL = img[0].replaceAll("._V1_", "$param") // prepare for parameter injection
@@ -366,11 +366,12 @@ apiHelper.processTMDB = async (imdbres, card) => {
     const movieTypes = ['feature', 'tv special', 'tv movie', 'short', 'movie']
     const tvTypes = ['tv series', 'tv mini-series']
 
-    let res = { 'movie_results': [], 'tv_results': [] } //remove this on internet
+    let res = { 'movie_results': [], 'tv_results': [] }
     let req = await fetch(`
     https://api.themoviedb.org/3/find/${imdbres.id}?api_key=${apiHelper.haveFun()}&language=en-US&external_source=imdb_id`)
     res = await req.json()
     let restype = ''
+
     if (res['movie_results'].length > 0 && movieTypes.includes(imdbres.q.toLowerCase())) {
         res = res['movie_results'][0];
         restype = 'movie'
@@ -380,6 +381,10 @@ apiHelper.processTMDB = async (imdbres, card) => {
     } else {
         res = "404"
     }
+	// //fallback search by name
+	// if (res === "404") {
+	// 	let fallbackRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiHelper.haveFun()}&query=${}&language=en-US`)
+	// }
 
     let copybtn = card.querySelector('.ctmdb')
     let viewbtn = card.querySelector('.vtmdb')
