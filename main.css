@@ -290,6 +290,7 @@ html {
     font-size: 30px;
     font-weight: 600;
     margin: 0;
+	line-height: 42px;
 }
 #details-x-button {
     grid-area: close
@@ -558,6 +559,3 @@ html {
 	}
 }
 
-#details-title {
-	line-height: 42px;
-}

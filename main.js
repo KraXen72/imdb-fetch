@@ -229,12 +229,13 @@ function genResultCard(result) {
 
 async function renderDetails(info, card, restype) {
     let obj = await api.tmdb.details(restype, info.resid)
+	console.log("details: ", obj)
 
     let details = document.getElementById('details-screen')
 
     update('details-title', getTitle("full"))
     update('details-genres', genrePills(obj.genres))
-    update('details-type-length', getDetailsLength(`<span id="details-pg">${getPG(obj.release_dates)}</span>`));
+    update('details-type-length', generateLine2(getPG(obj.release_dates)));
     update('details-overview', obj.overview)
     // update('details-pg', getPG(obj.release_dates))
     updateImages()
@@ -313,7 +314,7 @@ async function renderDetails(info, card, restype) {
         return self.indexOf(value) === index;
     }
     function getPG(relDates) {
-        let normalratings = ['M', 'R', 'M/R', 'G', 'PG', 'PG-13', "PG-16", 'NC-17', 'MA', 'MA 15', 'R 18', 'X 18']
+        let normalratings = ['M', 'R', 'M/R', 'G', 'PG', 'PG-13', "PG-16", 'NC-17', 'MA', 'MA 15', 'R 18', 'X 18', 'TV-MA', "MA"]
         let certs
         if (relDates !== undefined && relDates.results !== undefined) {
             certs = [].concat.apply([], relDates.results.map(date => date.release_dates.map(rd => rd.certification))) /*get all certifications from each country, flattern the array */
@@ -336,10 +337,13 @@ async function renderDetails(info, card, restype) {
         }
     }
 	
-    function getDetailsLength(prepend = '') {
+	/** generate the second line */
+    function generateLine2(pgString) {
 		let runtime = obj.runtime ?? ""
 		runtime = runtime === 0 ? "" : runtime
 		const type = restype === 'movie' ? 'Movie' : restype === 'tv' ? 'Tv series' : 'Other'
+
+		const prepend = `<span id="details-pg">${pgString}</span>`
 
 		if (restype === 'movie') {
 			const movieLength  = `${Math.floor(runtime / 60)}h ${runtime % 60}min`
