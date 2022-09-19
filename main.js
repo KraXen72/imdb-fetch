@@ -278,8 +278,78 @@ async function renderDetails(info, card, restype) {
 
 function addScript(src) { var s = document.createElement('script'); s.src = src; s.classList.add('imdb-request'); document.head.appendChild(s); }
 
-const imgUtil = {}
-const cardUtil = {}
+const cardUtil = {
+	/**
+	 * fancy way to open a link on new tab.
+	 * @param {String} url url
+	 */
+	fancyLinkOpen(url) {
+		setTimeout(() => { window.open(url, '_blank') }, 300)
+	},
+	/**
+	 * copy a string to clipboard
+	 * @param {String} whattocopy what to copy
+	 */
+	copyToClipboard(whattocopy) {
+		setTimeout(() => {
+			let copying = document.getElementById('copyinp');
+			copying.value = whattocopy;
+			copying.select();
+			document.execCommand("copy");
+		}, 300)
+	}
+}
+
+
+const imgUtil = {
+	/**
+	 * get the image from imdb api in hq or lq.
+	 * @param {Array} img array where [0] is image link
+	 * @param {String} quality "hq", "lq" or "ulq"
+	 * @returns link to image in desired quality
+	 */
+	getImgOfQuality(img, quality) {
+		if (!(Array.isArray(img))) {
+			//console.error(`no 'img' array provided. attempted quality: ${quality}. typeof img: ${typeof img}`)
+			return imgNA
+		}
+		const imageURL = img[0].replaceAll("._V1_", "$param") // prepare for parameter injection
+	
+		const _constructImageQuery = (url, quality, width, height, cropParam) => url.replaceAll("$param", `._V1_QL${quality}_UY${height}${cropParam}${width},${height}`)
+		
+		if (img === undefined || img.length === 0) {
+			return imgNA
+		} else {
+			// for the widhts and heights here i just referenced a "srcset" for an image on imdb.com
+			console.log(img[0] ?? "undefined", quality)
+			switch (quality) {
+				case "hq":
+					return _constructImageQuery(imageURL, 100, /*380*/1500, /*562*/1000, "_CR0,,")
+					break;
+				case "lq":
+					return _constructImageQuery(imageURL, 75, 285, 422, "_SX100_CR0,,") //_CR1,1,
+					break;
+				case "ulq":
+					return _constructImageQuery(imageURL, 10, 190, 281, "_SX100_CR0,,")
+					break;
+				default:
+					throw "No quality selected."
+					break;
+			}
+		}
+	},
+	/**
+	 * get the image from imdb api in hq or lq.
+	 * @param {Array} img array where [0] is image link
+	 * @param {String} quality "hq", "lq" or "ulq"
+	 * @returns link to image in desired quality
+	 */
+	containCover(imgArr) {
+		if (imgArr === undefined || imgArr.length === 0) { return "cover" } //imgNA is portrait
+		return imgArr[1] >= imgArr[2] ? "contain" : "cover"
+	}
+}
+
 const apiHelper = {
 	/** :') */
 	haveFun() {
@@ -329,72 +399,4 @@ const apiHelper = {
 
 		detbtn.onclick = () => { renderDetails({ restype, "resid": res.id, "v": imdbres.v !== undefined ? imdbres.v : "404" }, card, restype) }
 	}
-}
-
-/**
- * set the contain or cover for object fit.
- * @param {Array} imgArr image array where [1] is width and [2] is height
- * @return {String|String} "cover" or "contain"
- */
-imgUtil.containCover = (imgArr) => {
-    if (imgArr === undefined || imgArr.length === 0) { return "cover" } //imgNA is portrait
-    return imgArr[1] >= imgArr[2] ? "contain" : "cover"
-}
-
-/**
- * get the image from imdb api in hq or lq.
- * @param {Array} img array where [0] is image link
- * @param {String} quality "hq", "lq" or "ulq"
- * @returns link to image in desired quality
- */
-imgUtil.getImgOfQuality = (img, quality) => {
-    if (!(Array.isArray(img))) {
-        //console.error(`no 'img' array provided. attempted quality: ${quality}. typeof img: ${typeof img}`)
-        return imgNA
-    }
-    const imageURL = img[0].replaceAll("._V1_", "$param") // prepare for parameter injection
-
-    const _constructImageQuery = (url, quality, width, height, cropParam) => url.replaceAll("$param", `._V1_QL${quality}_UY${height}${cropParam}${width},${height}`)
-    
-    if (img === undefined || img.length === 0) {
-        return imgNA
-    } else {
-        // for the widhts and heights here i just referenced a "srcset" for an image on imdb.com
-        console.log(img[0] ?? "undefined", quality)
-        switch (quality) {
-            case "hq":
-                return _constructImageQuery(imageURL, 100, /*380*/1500, /*562*/1000, "_CR0,,")
-                break;
-            case "lq":
-                return _constructImageQuery(imageURL, 75, 285, 422, "_SX100_CR0,,") //_CR1,1,
-                break;
-            case "ulq":
-                return _constructImageQuery(imageURL, 10, 190, 281, "_SX100_CR0,,")
-                break;
-            default:
-                throw "No quality selected."
-                break;
-        }
-    }
-}
-
-/**
- * fancy way to open a link on new tab.
- * @param {String} url url
- */
-cardUtil.fancyLinkOpen = (url) => {
-    setTimeout(() => { window.open(url, '_blank') }, 300)
-}
-
-/**
- * copy a string to clipboard
- * @param {String} whattocopy what to copy
- */
-cardUtil.copyToClipboard = (whattocopy) => {
-    setTimeout(() => {
-        let copying = document.getElementById('copyinp');
-        copying.value = whattocopy;
-        copying.select();
-        document.execCommand("copy");
-    }, 300)
 }
