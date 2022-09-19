@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     inp.onkeydown = debounce(() => { //search query
         if (inp.value !== "") {
-            let funcname = encodeURIComponent(inp.value.toString().trim().replaceAll("%20", " ").replaceAll(' ', "_").replaceAll('-', "_").toLowerCase())
+            let funcname = encodeURIComponent(inp.value.toString().trim().replaceAll("%20"," ").replaceAll(' ', "_").replaceAll('-', "_").toLowerCase())
             console.log("query: ", inp.value, "funcname: ", funcname)
 
             window[`imdb$${funcname}`] = function (results) {
@@ -280,7 +280,56 @@ function addScript(src) { var s = document.createElement('script'); s.src = src;
 
 const imgUtil = {}
 const cardUtil = {}
-const apiHelper = {}
+const apiHelper = {
+	/** :') */
+	haveFun() {
+		return eval(atob('YXRvYignWkdFMk16VTBPREE0Tm1Vek9TdzVabVpqT1RFd1ptSmpNRGcxTWpaa1pqQTFMeXAwYUdseklHbHpJRzV2ZENCbGRtVnVJRzE1SUd0bGVTQTZZMjl2Ykdsdk9pb3YnKS5zcGxpdChhdG9iKCdMQT09JykpLmpvaW4oImJhbmFuYSIucmVwbGFjZSgiYmFuYW5hIiwgIiIpKS5yZXBsYWNlQWxsKGF0b2IoJ0x5cDBhR2x6SUdseklHNXZkQ0JsZG1WdUlHMTVJR3RsZVNBNlkyOXZiR2x2T2lvdicpLCAib3JhbmdlIi5yZXBsYWNlQWxsKGF0b2IoJ2IzSmhibWRsJyksICIiKSk='))
+	},
+	/**
+	* match IMDb id to TMDB id, determine restype
+	* @param {String} imdbres imdb result
+	* @param {Object} card html card element
+	*/
+	async processTMDB(imdbres, card) {
+		const movieTypes = ['feature', 'tv special', 'tv movie', 'short', 'movie']
+		const tvTypes = ['tv series', 'tv mini-series']
+
+		let res = { 'movie_results': [], 'tv_results': [] }
+		let req = await fetch(`
+		https://api.themoviedb.org/3/find/${imdbres.id}?api_key=${this.haveFun()}&language=en-US&external_source=imdb_id`)
+		res = await req.json()
+		let restype = ''
+
+		if (res['movie_results'].length > 0 && movieTypes.includes(imdbres.q.toLowerCase())) {
+			res = res['movie_results'][0];
+			restype = 'movie'
+		} else if (res['tv_results'].length > 0 && tvTypes.includes(imdbres.q.toLowerCase())) {
+			res = res['tv_results'][0];
+			restype = 'tv'
+		} else {
+			res = "404"
+		}
+		// //fallback search by name
+		// if (res === "404") {
+		// 	let fallbackRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiHelper.haveFun()}&query=${}&language=en-US`)
+		// }
+
+		let copybtn = card.querySelector('.ctmdb')
+		let viewbtn = card.querySelector('.vtmdb')
+		let detbtn = card.querySelector('.details')
+
+		if (res === "404") {
+			copybtn.setAttribute('disabled', "")
+			viewbtn.setAttribute('disabled', "")
+			detbtn.setAttribute('disabled', "")
+			return false
+		}
+		viewbtn.onclick = () => { cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${res.id}`) }
+		copybtn.onclick = () => { cardUtil.copyToClipboard(res.id) }
+
+		detbtn.onclick = () => { renderDetails({ restype, "resid": res.id, "v": imdbres.v !== undefined ? imdbres.v : "404" }, card, restype) }
+	}
+}
 
 /**
  * set the contain or cover for object fit.
@@ -348,56 +397,4 @@ cardUtil.copyToClipboard = (whattocopy) => {
         copying.select();
         document.execCommand("copy");
     }, 300)
-}
-
-/**
- * :')
- */
-apiHelper.haveFun = () => {
-    return eval(atob('YXRvYignWkdFMk16VTBPREE0Tm1Vek9TdzVabVpqT1RFd1ptSmpNRGcxTWpaa1pqQTFMeXAwYUdseklHbHpJRzV2ZENCbGRtVnVJRzE1SUd0bGVTQTZZMjl2Ykdsdk9pb3YnKS5zcGxpdChhdG9iKCdMQT09JykpLmpvaW4oImJhbmFuYSIucmVwbGFjZSgiYmFuYW5hIiwgIiIpKS5yZXBsYWNlQWxsKGF0b2IoJ0x5cDBhR2x6SUdseklHNXZkQ0JsZG1WdUlHMTVJR3RsZVNBNlkyOXZiR2x2T2lvdicpLCAib3JhbmdlIi5yZXBsYWNlQWxsKGF0b2IoJ2IzSmhibWRsJyksICIiKSk='))
-}
-
-/**
- * make da tmdb requet to get id
- * @param {String} imdbres imdb result
- * @param {Object} card html card element
- */
-apiHelper.processTMDB = async (imdbres, card) => {
-    const movieTypes = ['feature', 'tv special', 'tv movie', 'short', 'movie']
-    const tvTypes = ['tv series', 'tv mini-series']
-
-    let res = { 'movie_results': [], 'tv_results': [] }
-    let req = await fetch(`
-    https://api.themoviedb.org/3/find/${imdbres.id}?api_key=${apiHelper.haveFun()}&language=en-US&external_source=imdb_id`)
-    res = await req.json()
-    let restype = ''
-
-    if (res['movie_results'].length > 0 && movieTypes.includes(imdbres.q.toLowerCase())) {
-        res = res['movie_results'][0];
-        restype = 'movie'
-    } else if (res['tv_results'].length > 0 && tvTypes.includes(imdbres.q.toLowerCase())) {
-        res = res['tv_results'][0];
-        restype = 'tv'
-    } else {
-        res = "404"
-    }
-	// //fallback search by name
-	// if (res === "404") {
-	// 	let fallbackRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiHelper.haveFun()}&query=${}&language=en-US`)
-	// }
-
-    let copybtn = card.querySelector('.ctmdb')
-    let viewbtn = card.querySelector('.vtmdb')
-    let detbtn = card.querySelector('.details')
-
-    if (res === "404") {
-        copybtn.setAttribute('disabled', "")
-        viewbtn.setAttribute('disabled', "")
-        detbtn.setAttribute('disabled', "")
-        return false
-    }
-    viewbtn.onclick = () => { cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${res.id}`) }
-    copybtn.onclick = () => { cardUtil.copyToClipboard(res.id) }
-
-    detbtn.onclick = () => { renderDetails({ restype, "resid": res.id, "v": imdbres.v !== undefined ? imdbres.v : "404" }, card, restype) }
 }
