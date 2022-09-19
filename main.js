@@ -311,7 +311,7 @@ imgUtil.getImgOfQuality = (img, quality) => {
                 return _constructImageQuery(imageURL, 100, /*380*/1500, /*562*/1000, "_CR0,,")
                 break;
             case "lq":
-                return _constructImageQuery(imageURL, 75, 285, 422, "_CR1,1,")
+                return _constructImageQuery(imageURL, 75, 285, 422, "_SX100_CR0,,") //_CR1,1,
                 break;
             case "ulq":
                 return _constructImageQuery(imageURL, 10, 190, 281, "_SX100_CR0,,")
