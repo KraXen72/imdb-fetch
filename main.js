@@ -41,6 +41,102 @@ function debounce(func, timeout = 300) {
     };
 }
 
+/** the main api object to access apis */
+const api = {
+	/** wrapper for tmdb api */
+	tmdb: {
+		_params : { 
+			"\x61\x70\x69\x5F\x6B\x65\x79": eval(atob('YXRvYignWkdFMk16VTBPREE0Tm1Vek9TdzVabVpqT1RFd1ptSmpNRGcxTWpaa1pqQTFMeXAwYUdseklHbHpJRzV2ZENCbGRtVnVJRzE1SUd0bGVTQTZZMjl2Ykdsdk9pb3YnKS5zcGxpdChhdG9iKCdMQT09JykpLmpvaW4oImJhbmFuYSIucmVwbGFjZSgiYmFuYW5hIiwgIiIpKS5yZXBsYWNlQWxsKGF0b2IoJ0x5cDBhR2x6SUdseklHNXZkQ0JsZG1WdUlHMTVJR3RsZVNBNlkyOXZiR2x2T2lvdicpLCAib3JhbmdlIi5yZXBsYWNlQWxsKGF0b2IoJ2IzSmhibWRsJyksICIiKSk=')), 
+			language: "en_US"  
+		},
+		async find(imdbID, params) {
+			if (typeof imdbID === "undefined") { console.error("invalid id: ", imdbID); return void 0 }
+			const url = new URL(`https://api.themoviedb.org/3/find/${imdbID}`)
+			url.search = new URLSearchParams({
+				...this._params,
+				"external_source": "imdb_id",
+				...params
+			}).toString()
+
+			//console.log("new api: url: ", url)
+			try {
+				let req = await fetch(url)
+				return await req.json()
+			} catch (error) {
+				console.error(error)
+				return void 0 // so it can be used with '?? default value'
+			}
+		},
+		async details(type, TMDBid, params) {
+			if (typeof TMDBid === "undefined" || typeof type === "undefined") { console.error("invalid id: ", TMDBid, "or type: ", type); return void 0 }
+
+			const url = new URL(`https://api.themoviedb.org/3/${type}/${TMDBid}`)
+			url.search = new URLSearchParams({
+				...this._params,
+				"append_to_response": "release_dates",
+				...params
+			}).toString()
+
+			try {
+				let req = await fetch(url)
+				return await req.json()
+			} catch (error) {
+				console.error(error)
+				return void 0 // so it can be used with '?? default value'
+			}
+		}
+	}
+}
+
+const imgUtil = {
+	/**
+	 * get the image from imdb api in hq or lq.
+	 * @param {Array} img array where [0] is image link
+	 * @param {String} quality "hq", "lq" or "ulq"
+	 * @returns link to image in desired quality
+	 */
+	getImgOfQuality(img, quality) {
+		if (!(Array.isArray(img))) {
+			//console.error(`no 'img' array provided. attempted quality: ${quality}. typeof img: ${typeof img}`)
+			return imgNA
+		}
+		const imageURL = img[0].replaceAll("._V1_", "$param") // prepare for parameter injection
+	
+		const _constructImageQuery = (url, quality, width, height, cropParam) => url.replaceAll("$param", `._V1_QL${quality}_UY${height}${cropParam}${width},${height}`)
+		
+		if (img === undefined || img.length === 0) {
+			return imgNA
+		} else {
+			// for the widhts and heights here i just referenced a "srcset" for an image on imdb.com
+			//console.log(img[0] ?? "undefined", quality)
+			switch (quality) {
+				case "hq":
+					return _constructImageQuery(imageURL, 100, /*380*/1500, /*562*/1000, "_CR0,,")
+					break;
+				case "lq":
+					return _constructImageQuery(imageURL, 75, 285, 422, "_SX100_CR0,,") //_CR1,1,
+					break;
+				case "ulq":
+					return _constructImageQuery(imageURL, 10, 190, 281, "_SX100_CR0,,")
+					break;
+				default:
+					throw "No quality selected."
+					break;
+			}
+		}
+	},
+	/**
+	 * get the image from imdb api in hq or lq.
+	 * @param {Array} img array where [0] is image link
+	 * @param {String} quality "hq", "lq" or "ulq"
+	 * @returns link to image in desired quality
+	 */
+	containCover(imgArr) {
+		if (imgArr === undefined || imgArr.length === 0) { return "cover" } //imgNA is portrait
+		return imgArr[1] >= imgArr[2] ? "contain" : "cover"
+	}
+}
+
 /*ui stuff*/
 function renderResults(obj) {
     let resultsDiv = document.getElementById("results")
@@ -119,16 +215,12 @@ function genResultCard(result) {
 
     resultsDiv.appendChild(rCard)
 
-    apiHelper.processTMDB(result, rCard) //tmdb onclicks get applied after append
+    processTMDB(result, rCard) //tmdb onclicks get applied after append
 
 }
 
 async function renderDetails(info, card, restype) {
-    let url = `https://api.themoviedb.org/3/${info.restype}/${info.resid}?api_key=${apiHelper.haveFun()}&language=en-US&append_to_response=release_dates`
-    const dreq = await fetch(url)
-    let obj = await dreq.json()
-
-    console.log("detail fetch: ", url, obj)
+    let obj = await api.tmdb.details(restype, info.resid)
 
     let details = document.getElementById('details-screen')
 
@@ -300,103 +392,48 @@ const cardUtil = {
 	}
 }
 
+/**
+* match IMDb id to TMDB id, determine restype
+* @param {String} imdbres imdb result
+* @param {Object} card html card element
+*/
+async function processTMDB(imdbres, card) {
+	const movieTypes = ['feature', 'tv special', 'tv movie', 'short', 'movie']
+	const tvTypes = ['tv series', 'tv mini-series']
 
-const imgUtil = {
-	/**
-	 * get the image from imdb api in hq or lq.
-	 * @param {Array} img array where [0] is image link
-	 * @param {String} quality "hq", "lq" or "ulq"
-	 * @returns link to image in desired quality
-	 */
-	getImgOfQuality(img, quality) {
-		if (!(Array.isArray(img))) {
-			//console.error(`no 'img' array provided. attempted quality: ${quality}. typeof img: ${typeof img}`)
-			return imgNA
-		}
-		const imageURL = img[0].replaceAll("._V1_", "$param") // prepare for parameter injection
-	
-		const _constructImageQuery = (url, quality, width, height, cropParam) => url.replaceAll("$param", `._V1_QL${quality}_UY${height}${cropParam}${width},${height}`)
-		
-		if (img === undefined || img.length === 0) {
-			return imgNA
-		} else {
-			// for the widhts and heights here i just referenced a "srcset" for an image on imdb.com
-			console.log(img[0] ?? "undefined", quality)
-			switch (quality) {
-				case "hq":
-					return _constructImageQuery(imageURL, 100, /*380*/1500, /*562*/1000, "_CR0,,")
-					break;
-				case "lq":
-					return _constructImageQuery(imageURL, 75, 285, 422, "_SX100_CR0,,") //_CR1,1,
-					break;
-				case "ulq":
-					return _constructImageQuery(imageURL, 10, 190, 281, "_SX100_CR0,,")
-					break;
-				default:
-					throw "No quality selected."
-					break;
-			}
-		}
-	},
-	/**
-	 * get the image from imdb api in hq or lq.
-	 * @param {Array} img array where [0] is image link
-	 * @param {String} quality "hq", "lq" or "ulq"
-	 * @returns link to image in desired quality
-	 */
-	containCover(imgArr) {
-		if (imgArr === undefined || imgArr.length === 0) { return "cover" } //imgNA is portrait
-		return imgArr[1] >= imgArr[2] ? "contain" : "cover"
+	let res = await api.tmdb.find(imdbres.id) ?? { 'movie_results': [], 'tv_results': [] }
+	console.log(res)
+	// let req = await fetch(`
+	// https://api.themoviedb.org/3/find/${imdbres.id}?api_key=${this.haveFun()}&language=en-US&external_source=imdb_id`)
+	// res = await req.json()
+	let restype = ''
+
+	if (res['movie_results'].length > 0 && movieTypes.includes(imdbres.q.toLowerCase())) {
+		res = res['movie_results'][0];
+		restype = 'movie'
+	} else if (res['tv_results'].length > 0 && tvTypes.includes(imdbres.q.toLowerCase())) {
+		res = res['tv_results'][0];
+		restype = 'tv'
+	} else {
+		res = "404"
 	}
-}
+	// //fallback search by name
+	// if (res === "404") {
+	// 	let fallbackRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${api.tmdb.haveFun()}&query=${}&language=en-US`)
+	// }
 
-const apiHelper = {
-	/** :') */
-	haveFun() {
-		return eval(atob('YXRvYignWkdFMk16VTBPREE0Tm1Vek9TdzVabVpqT1RFd1ptSmpNRGcxTWpaa1pqQTFMeXAwYUdseklHbHpJRzV2ZENCbGRtVnVJRzE1SUd0bGVTQTZZMjl2Ykdsdk9pb3YnKS5zcGxpdChhdG9iKCdMQT09JykpLmpvaW4oImJhbmFuYSIucmVwbGFjZSgiYmFuYW5hIiwgIiIpKS5yZXBsYWNlQWxsKGF0b2IoJ0x5cDBhR2x6SUdseklHNXZkQ0JsZG1WdUlHMTVJR3RsZVNBNlkyOXZiR2x2T2lvdicpLCAib3JhbmdlIi5yZXBsYWNlQWxsKGF0b2IoJ2IzSmhibWRsJyksICIiKSk='))
-	},
-	/**
-	* match IMDb id to TMDB id, determine restype
-	* @param {String} imdbres imdb result
-	* @param {Object} card html card element
-	*/
-	async processTMDB(imdbres, card) {
-		const movieTypes = ['feature', 'tv special', 'tv movie', 'short', 'movie']
-		const tvTypes = ['tv series', 'tv mini-series']
+	let copybtn = card.querySelector('.ctmdb')
+	let viewbtn = card.querySelector('.vtmdb')
+	let detbtn = card.querySelector('.details')
 
-		let res = { 'movie_results': [], 'tv_results': [] }
-		let req = await fetch(`
-		https://api.themoviedb.org/3/find/${imdbres.id}?api_key=${this.haveFun()}&language=en-US&external_source=imdb_id`)
-		res = await req.json()
-		let restype = ''
-
-		if (res['movie_results'].length > 0 && movieTypes.includes(imdbres.q.toLowerCase())) {
-			res = res['movie_results'][0];
-			restype = 'movie'
-		} else if (res['tv_results'].length > 0 && tvTypes.includes(imdbres.q.toLowerCase())) {
-			res = res['tv_results'][0];
-			restype = 'tv'
-		} else {
-			res = "404"
-		}
-		// //fallback search by name
-		// if (res === "404") {
-		// 	let fallbackRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${apiHelper.haveFun()}&query=${}&language=en-US`)
-		// }
-
-		let copybtn = card.querySelector('.ctmdb')
-		let viewbtn = card.querySelector('.vtmdb')
-		let detbtn = card.querySelector('.details')
-
-		if (res === "404") {
-			copybtn.setAttribute('disabled', "")
-			viewbtn.setAttribute('disabled', "")
-			detbtn.setAttribute('disabled', "")
-			return false
-		}
-		viewbtn.onclick = () => { cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${res.id}`) }
-		copybtn.onclick = () => { cardUtil.copyToClipboard(res.id) }
-
-		detbtn.onclick = () => { renderDetails({ restype, "resid": res.id, "v": imdbres.v !== undefined ? imdbres.v : "404" }, card, restype) }
+	if (res === "404") {
+		copybtn.setAttribute('disabled', "")
+		viewbtn.setAttribute('disabled', "")
+		detbtn.setAttribute('disabled', "")
+		return false
 	}
+	viewbtn.onclick = () => { cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${res.id}`) }
+	copybtn.onclick = () => { cardUtil.copyToClipboard(res.id) }
+
+	detbtn.onclick = () => { renderDetails({ restype, "resid": res.id, "v": imdbres.v !== undefined ? imdbres.v : "404" }, card, restype) }
 }
