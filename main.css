@@ -557,3 +557,7 @@ html {
 		height: 14rem;
 	}
 }
+
+#details-title {
+	line-height: 42px;
+}

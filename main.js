@@ -49,16 +49,24 @@ const api = {
 			"\x61\x70\x69\x5F\x6B\x65\x79": eval(atob('YXRvYignWkdFMk16VTBPREE0Tm1Vek9TdzVabVpqT1RFd1ptSmpNRGcxTWpaa1pqQTFMeXAwYUdseklHbHpJRzV2ZENCbGRtVnVJRzE1SUd0bGVTQTZZMjl2Ykdsdk9pb3YnKS5zcGxpdChhdG9iKCdMQT09JykpLmpvaW4oImJhbmFuYSIucmVwbGFjZSgiYmFuYW5hIiwgIiIpKS5yZXBsYWNlQWxsKGF0b2IoJ0x5cDBhR2x6SUdseklHNXZkQ0JsZG1WdUlHMTVJR3RsZVNBNlkyOXZiR2x2T2lvdicpLCAib3JhbmdlIi5yZXBsYWNlQWxsKGF0b2IoJ2IzSmhibWRsJyksICIiKSk=')), 
 			language: "en_US"  
 		},
-		async find(imdbID, params) {
+		async findByID(imdbID, params) {
 			if (typeof imdbID === "undefined") { console.error("invalid id: ", imdbID); return void 0 }
 			const url = new URL(`https://api.themoviedb.org/3/find/${imdbID}`)
-			url.search = new URLSearchParams({
-				...this._params,
-				"external_source": "imdb_id",
-				...params
-			}).toString()
+			url.search = new URLSearchParams({...this._params, "external_source": "imdb_id", ...params}).toString()
 
-			//console.log("new api: url: ", url)
+			try {
+				let req = await fetch(url)
+				return await req.json()
+			} catch (error) {
+				console.error(error)
+				return void 0 // so it can be used with '?? default value'
+			}
+		},
+		async search(name, type, params) { //unused for now lol
+			if (typeof name === "undefined" || typeof type === "undefined") { console.error("invalid name: ", name, "or type: ", type); return void 0 }
+			const url = new URL(`https://api.themoviedb.org/3/search/${type}`)
+			url.search = new URLSearchParams({...this._params, "query": name, ...params}).toString()
+
 			try {
 				let req = await fetch(url)
 				return await req.json()
@@ -243,8 +251,7 @@ async function renderDetails(info, card, restype) {
 	const scoreVal = obj.vote_average
     let percScore = Number(Math.round(scoreVal * 10).toFixed(0))
 	const circProgress = document.querySelector(".circular-progress")
-	console.log(typeof scoreVal, scoreVal)
-
+	//console.log(typeof scoreVal, scoreVal)
 	
 	if (scoreVal === 0 || scoreVal === null) {
 		circProgress.dataset.feel = "null"
@@ -398,42 +405,56 @@ const cardUtil = {
 * @param {Object} card html card element
 */
 async function processTMDB(imdbres, card) {
-	const movieTypes = ['feature', 'tv special', 'tv movie', 'short', 'movie']
+	const movieTypes = ['feature', 'tv special', 'tv movie', 'tv short', 'short', 'movie', 'video']
 	const tvTypes = ['tv series', 'tv mini-series']
 
-	let res = await api.tmdb.find(imdbres.id) ?? { 'movie_results': [], 'tv_results': [] }
-	console.log(res)
+	let res = await api.tmdb.findByID(imdbres.id) ?? { 'movie_results': [], 'tv_results': [] }
 	// let req = await fetch(`
 	// https://api.themoviedb.org/3/find/${imdbres.id}?api_key=${this.haveFun()}&language=en-US&external_source=imdb_id`)
 	// res = await req.json()
+	
+	const cleanType = imdbres.q.toLowerCase()
 	let restype = ''
 
-	if (res['movie_results'].length > 0 && movieTypes.includes(imdbres.q.toLowerCase())) {
-		res = res['movie_results'][0];
+	if (movieTypes.includes(cleanType)) {
 		restype = 'movie'
-	} else if (res['tv_results'].length > 0 && tvTypes.includes(imdbres.q.toLowerCase())) {
-		res = res['tv_results'][0];
+	} else if (tvTypes.includes(cleanType)) {
 		restype = 'tv'
 	} else {
-		res = "404"
+		restype = 'other'
 	}
-	// //fallback search by name
-	// if (res === "404") {
-	// 	let fallbackRes = await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${api.tmdb.haveFun()}&query=${}&language=en-US`)
-	// }
+
+	if (res === { 'movie_results': [], 'tv_results': [] }) res = "404"
+
+	let finalRes = '404'
+	if (restype === "movie" && res['movie_results'].length > 0) {
+		finalRes = res['movie_results'][0]
+	} else if (restype === "tv" && res['tv_results'].length > 0) {
+		finalRes = res['tv_results'][0]
+	// } else if ((restype === "movie" || restype === "tv") && res === '404') {
+	// 	fallbackRes = await api.tmdb.search(imdbres.l, restype === "" ? cleanType : restype)
+	// 	console.log(fallbackRes, "fallback search for: ", imdbres)
+
+	// 	finalRes = '404'
+	} else {
+		console.warn(`${imdbres.l} doesen't exist on TMDB`, imdbres)
+		finalRes = '404'
+	}
+
+	console.log(imdbres.l, finalRes, restype)
 
 	let copybtn = card.querySelector('.ctmdb')
 	let viewbtn = card.querySelector('.vtmdb')
 	let detbtn = card.querySelector('.details')
 
-	if (res === "404") {
+	if (finalRes === "404") {
 		copybtn.setAttribute('disabled', "")
 		viewbtn.setAttribute('disabled', "")
 		detbtn.setAttribute('disabled', "")
 		return false
 	}
-	viewbtn.onclick = () => { cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${res.id}`) }
-	copybtn.onclick = () => { cardUtil.copyToClipboard(res.id) }
+	viewbtn.onclick = () => { cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${finalRes.id}`) }
+	copybtn.onclick = () => { cardUtil.copyToClipboard(finalRes.id) }
 
-	detbtn.onclick = () => { renderDetails({ restype, "resid": res.id, "v": imdbres.v !== undefined ? imdbres.v : "404" }, card, restype) }
+	detbtn.onclick = () => { renderDetails({ restype, "resid": finalRes.id, "v": imdbres.v ?? "404" }, card, restype) }
 }
