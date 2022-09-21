@@ -41,12 +41,25 @@ function debounce(func, timeout = 300) {
     };
 }
 
+async function safeJSONRequest(URLObject) {
+	try {
+		const req = await fetch(URLObject)
+		return await req.json()
+	} catch (error) {
+		console.error(`safeJSONRequest Error:`, error, ' on URL object: ', URL)
+		return void 0 // so it can be used with '?? default value'
+	}
+}
+
 /** the main api object to access apis */
 const api = {
 	/** wrapper for tmdb api */
 	tmdb: {
 		_params : { 
-			"\x61\x70\x69\x5F\x6B\x65\x79": eval(atob('YXRvYignWkdFMk16VTBPREE0Tm1Vek9TdzVabVpqT1RFd1ptSmpNRGcxTWpaa1pqQTFMeXAwYUdseklHbHpJRzV2ZENCbGRtVnVJRzE1SUd0bGVTQTZZMjl2Ykdsdk9pb3YnKS5zcGxpdChhdG9iKCdMQT09JykpLmpvaW4oImJhbmFuYSIucmVwbGFjZSgiYmFuYW5hIiwgIiIpKS5yZXBsYWNlQWxsKGF0b2IoJ0x5cDBhR2x6SUdseklHNXZkQ0JsZG1WdUlHMTVJR3RsZVNBNlkyOXZiR2x2T2lvdicpLCAib3JhbmdlIi5yZXBsYWNlQWxsKGF0b2IoJ2IzSmhibWRsJyksICIiKSk=')), 
+			// this is my api key, but you can get one for free by applying at https://www.themoviedb.org/settings/api.
+			// they are not request limited unlike the OMDbapi.
+			// or if you don't want to go through registration, there is a bunch of keys here: https://github.com/rickylawson/freekeys 
+			"api_key": "7248c5cc1f2080c7baf7361d2427fb80",
 			language: "en_US"  
 		},
 		async findByID(imdbID, params) {
@@ -54,44 +67,23 @@ const api = {
 			const url = new URL(`https://api.themoviedb.org/3/find/${imdbID}`)
 			url.search = new URLSearchParams({...this._params, "external_source": "imdb_id", ...params}).toString()
 
-			try {
-				let req = await fetch(url)
-				return await req.json()
-			} catch (error) {
-				console.error(error)
-				return void 0 // so it can be used with '?? default value'
-			}
+			return await safeJSONRequest(url)
 		},
 		async search(name, type, params) { //unused for now lol
 			if (typeof name === "undefined" || typeof type === "undefined") { console.error("invalid name: ", name, "or type: ", type); return void 0 }
 			const url = new URL(`https://api.themoviedb.org/3/search/${type}`)
 			url.search = new URLSearchParams({...this._params, "query": name, ...params}).toString()
 
-			try {
-				let req = await fetch(url)
-				return await req.json()
-			} catch (error) {
-				console.error(error)
-				return void 0 // so it can be used with '?? default value'
-			}
+			return await safeJSONRequest(url)
 		},
 		async details(type, TMDBid, params) {
 			if (typeof TMDBid === "undefined" || typeof type === "undefined") { console.error("invalid id: ", TMDBid, "or type: ", type); return void 0 }
 
 			const url = new URL(`https://api.themoviedb.org/3/${type}/${TMDBid}`)
-			url.search = new URLSearchParams({
-				...this._params,
-				"append_to_response": "release_dates",
-				...params
-			}).toString()
+			url.search = new URLSearchParams({...this._params, "append_to_response": type === "movie" ? "release_dates" : "content_ratings", ...params}).toString()
+			console.log("details", url)
 
-			try {
-				let req = await fetch(url)
-				return await req.json()
-			} catch (error) {
-				console.error(error)
-				return void 0 // so it can be used with '?? default value'
-			}
+			return await safeJSONRequest(url)
 		}
 	}
 }
@@ -313,27 +305,37 @@ async function renderDetails(info, card, restype) {
     function onlyUnique(value, index, self) {
         return self.indexOf(value) === index;
     }
-    function getPG(relDates) {
-        let normalratings = ['M', 'R', 'M/R', 'G', 'PG', 'PG-13', "PG-16", 'NC-17', 'MA', 'MA 15', 'R 18', 'X 18', 'TV-MA', "MA"]
+    function getPG(relDates, mode = 'movie') {
+		const countriesBlacklist = ["TW", "TH", "HK", "IA", "IT", "FR", "RO", "IN", "PE", "GR", "PT", "SE", "NO", "BG", "HU", "DK", "ES", "MY"] // wierd/non-standard ratings
+
         let certs
-        if (relDates !== undefined && relDates.results !== undefined) {
-            certs = [].concat.apply([], relDates.results.map(date => date.release_dates.map(rd => rd.certification))) /*get all certifications from each country, flattern the array */
-                .filter(item => item !== "")  /*filter out "",*/
-                .filter(onlyUnique) /* filter out duplicates */
-                .map(item => {
-                    item.replaceAll("+", ""); //get rid of 16+ etc so its only 16
-                    return parseInt(item) || item //try to convert to numbers
-                })
-                .filter(item => typeof item === 'number' || normalratings.includes(item) || item.includes('PG-')) //filter out all wierdass ratings
-                .sort() //sort alphabetically
-                .sort((a, b) => a - b) //try to sort from lowest
+        if (relDates !== undefined && relDates.results !== undefined) { //TODO make this accept tv certs
+			if (mode === 'movie') {
+				certs = relDates.results.map(result => {
+					const country = result["iso_3166_1"]
+					const certifications = result["release_dates"]
+					// remove duplicates by casting arr => set => arr, filter "" out of the array
+					return { country, certs: [...new Set([ ...certifications.map(c => c.certification) ])].filter(c => c !== "") }
+				})
+				.filter(cert => cert.certs.length > 0) //filter out countries with no certifications
+				.map(({country, certs}) => ({country, cert: certs[0]})) // by this point we assume each country only has 1 cert. cast certs[0] => cert
+				.filter((cert, i, arr) => arr.length > 1 && !countriesBlacklist.includes(cert.country) ) //filter out blacklist countries, but not if they're the last ones
+				.map(({country, cert}) => ({country, cert, value: assignStandardValue(cert)}))
+				
+				//TODO finish
+				console.log(certs)
+			} else if (mode === 'tv') {
+				certs = [] //TODO add shows support
+			} else {
+				certs = []
+			}
         } else {
             certs = []
         }
         if (certs.length > 0) {
             return `<span title="${certs.join(", ")}">${typeof certs[0] === 'number' ? `PG-${certs[0]}` : certs[0]}</span>`
         } else {
-            return `<span>PG-??</span>`
+            return `<span title="No age rating information available">N/A</span>`
         }
     }
 	
@@ -461,4 +463,76 @@ async function processTMDB(imdbres, card) {
 	copybtn.onclick = () => { cardUtil.copyToClipboard(finalRes.id) }
 
 	detbtn.onclick = () => { renderDetails({ restype, "resid": finalRes.id, "v": imdbres.v ?? "404" }, card, restype) }
+}
+
+/** assign a numerical value to different country ratings/certifications so they can be easily sorted */
+function assignStandardValue(cert) {
+	switch (cert) {
+		case "RC":
+		case "X18+":
+		case "R18+":
+		case "R18":
+		case "X":
+			return 21
+		case "18":
+		case "18+":
+		case "R-18":
+		case "N-18":
+			return 18
+		case "NC-17":
+		case "18A":
+		case "17":
+			return 17
+		case "R":
+		case "16+":
+		case "16":
+		case "R-16":
+		case "N-16":
+			return 16
+		case "M":
+		case "MA15+":
+		case "15":
+			return 15
+		case "14A":
+		case "14":
+			return 14
+		case "PG-13":
+		case "13+":
+		case "13":
+		case "R-13":
+		case "N-13":
+		case "PG13":
+			return 13
+		case "12":
+		case "UA":
+		case "12A":
+		case "12+":
+			return 12
+		case "11":
+		case "K-11":
+			return 11
+		case "PG":
+		case "10":
+			return 10
+		case "9":
+			return 9
+		case "7":
+		case "N-7":
+			return 7
+		case "6":
+		case "6+":
+			return 6
+		case "U":
+		case "V":
+		case "G":
+		case "L":
+		case "S":
+		case "0+":
+		case "0":
+		case "AL":
+			return 0
+		case "NR":
+		default:
+			return null
+	}
 }
