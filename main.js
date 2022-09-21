@@ -305,12 +305,18 @@ async function renderDetails(info, card, restype) {
     function onlyUnique(value, index, self) {
         return self.indexOf(value) === index;
     }
+	function formatCerts(median, certs) {
+		return `using country: '${median.country}'` + "\n\n" + `${certs.map(c => `[${c.country}]: ${c.cert} --- ${c.value}`).join("\n")}`
+	}
     function getPG(relDates, mode = 'movie') {
 		const countriesBlacklist = ["TW", "TH", "HK", "IA", "IT", "FR", "RO", "IN", "PE", "GR", "PT", "SE", "NO", "BG", "HU", "DK", "ES", "MY"] // wierd/non-standard ratings
 
         let certs
-        if (relDates !== undefined && relDates.results !== undefined) { //TODO make this accept tv certs
-			if (mode === 'movie') {
+		let median = { country: "US", cert: "NR", value: null }
+        if (relDates !== undefined) {
+			if (mode === 'movie' && relDates.results !== undefined && relDates.results.length > 0) {
+				const tempCertsForFilter = []
+				debugger;
 				certs = relDates.results.map(result => {
 					const country = result["iso_3166_1"]
 					const certifications = result["release_dates"]
@@ -318,23 +324,27 @@ async function renderDetails(info, card, restype) {
 					return { country, certs: [...new Set([ ...certifications.map(c => c.certification) ])].filter(c => c !== "") }
 				})
 				.filter(cert => cert.certs.length > 0) //filter out countries with no certifications
-				.map(({country, certs}) => ({country, cert: certs[0]})) // by this point we assume each country only has 1 cert. cast certs[0] => cert
-				.filter((cert, i, arr) => arr.length > 1 && !countriesBlacklist.includes(cert.country) ) //filter out blacklist countries, but not if they're the last ones
-				.map(({country, cert}) => ({country, cert, value: assignStandardValue(cert)}))
+				.map(({country, certs}) => ({country, cert: certs[0].trim().replaceAll(" ", "") })) // by this point we assume each country only has 1 cert. cast certs[0] => cert
+				.filter((cert, i, arr) => arr.length > 1 && !countriesBlacklist.includes(cert.country) ) // filter out blacklist countries, but not if they're the last ones
+				.map(({country, cert}) => ({country, cert, value: assignStandardValue(cert)})) // assign standard values
+				.filter(cert => { if (!tempCertsForFilter.includes(cert.value) && cert.value !== null) { tempCertsForFilter.push(cert.value); return true; } else { return false; } }) // filter out not unique values by cert
+				.sort((cert1, cert2) => cert1.value - cert2.value) // sort by value
+
+				// TODO fix old walking tall with R rating somewhere getting lost idk
 				
-				//TODO finish
-				console.log(certs)
+				if (certs.length > 0) median = certs[Math.floor((certs.length - 1) / 2)]; // middle out of sorted array
+				console.log(certs, relDates.results)
 			} else if (mode === 'tv') {
 				certs = [] //TODO add shows support
-			} else {
-				certs = []
 			}
-        } else {
-            certs = []
         }
-        if (certs.length > 0) {
-            return `<span title="${certs.join(", ")}">${typeof certs[0] === 'number' ? `PG-${certs[0]}` : certs[0]}</span>`
+
+		console.log(median)
+        if (median.cert !== "NR" && median.value !== null) {
+			document.getElementById("details-type-length").dataset.ratingColor = median.value // to be referenced in css
+            return `<span title="${formatCerts(median, certs)}">${median.value === 21 ? median.cert : median.value}</span>`
         } else {
+			document.getElementById("details-type-length").dataset.ratingColor = -1
             return `<span title="No age rating information available">N/A</span>`
         }
     }
@@ -488,10 +498,12 @@ function assignStandardValue(cert) {
 		case "16":
 		case "R-16":
 		case "N-16":
+		case "K-16":
 			return 16
 		case "M":
 		case "MA15+":
 		case "15":
+		case "R-15":
 			return 15
 		case "14A":
 		case "14":
