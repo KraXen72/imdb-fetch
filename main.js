@@ -221,13 +221,19 @@ function genResultCard(result) {
 
 async function renderDetails(info, card, restype) {
     let obj = await api.tmdb.details(restype, info.resid)
-	console.log("details: ", obj)
+	console.log(`[${restype}] details: `, obj)
 
     let details = document.getElementById('details-screen')
 
     update('details-title', getTitle("full"))
     update('details-genres', genrePills(obj.genres))
-    update('details-type-length', generateLine2(getPG(obj.release_dates)));
+	if (restype === 'movie') {
+		update('details-type-length', generateLine2(getPG(obj.release_dates.results, 'movie')))
+	} else if (restype === 'tv') {
+		update('details-type-length', generateLine2(getPG(obj.content_ratings.results, 'tv')))
+	} else {
+		update('details-type-length', generateLine2(getPG([])))
+	}
     update('details-overview', obj.overview)
     // update('details-pg', getPG(obj.release_dates))
     updateImages()
@@ -244,7 +250,6 @@ async function renderDetails(info, card, restype) {
 	const scoreVal = obj.vote_average
     let percScore = Number(Math.round(scoreVal * 10).toFixed(0))
 	const circProgress = document.querySelector(".circular-progress")
-	//console.log(typeof scoreVal, scoreVal)
 	
 	if (scoreVal === 0 || scoreVal === null) {
 		circProgress.dataset.feel = "null"
@@ -305,44 +310,78 @@ async function renderDetails(info, card, restype) {
     function onlyUnique(value, index, self) {
         return self.indexOf(value) === index;
     }
-	function formatCerts(median, certs) {
-		return `using country: '${median.country}'` + "\n\n" + `${certs.map(c => `[${c.country}]: ${c.cert} --- ${c.value}`).join("\n")}`
-	}
+
+	// certification formatting
     function getPG(relDates, mode = 'movie') {
 		const countriesBlacklist = ["TW", "TH", "HK", "IA", "IT", "FR", "RO", "IN", "PE", "GR", "PT", "SE", "NO", "BG", "HU", "DK", "ES", "MY"] // wierd/non-standard ratings
-
-        let certs
-		let median = { country: "US", cert: "NR", value: null }
-        if (relDates !== undefined) {
-			if (mode === 'movie' && relDates.results !== undefined && relDates.results.length > 0) {
-				const tempCertsForFilter = []
-				debugger;
-				certs = relDates.results.map(result => {
+		// format helpers
+		function formatCerts(median, certs) {
+			return `using country: '${median.country}'` + "\n\n" + `${certs.map(c => `[${c.country}]: ${c.cert} --- ${c.value}`).join("\n")}`
+		}
+		function formatMedian(median) {
+			if (median.value === 21 || (median.country === "US" && median.value > 15 && !median.cert.includes("TV-"))) { 
+				return median.cert 
+			} else if (median.value === 0) { 
+				return "0+" 
+			} else { 
+				return median.value
+			}
+		}
+		// main certification processing unit
+		function processCertifications(initialArray, mode) {
+			console.log("certs: ", initialArray)
+			const tempCertsForFilter = []
+			let certs = []
+			if (mode === 'movie') {
+				certs = initialArray.map(result => {
 					const country = result["iso_3166_1"]
 					const certifications = result["release_dates"]
 					// remove duplicates by casting arr => set => arr, filter "" out of the array
 					return { country, certs: [...new Set([ ...certifications.map(c => c.certification) ])].filter(c => c !== "") }
 				})
-				.filter(cert => cert.certs.length > 0) //filter out countries with no certifications
-				.map(({country, certs}) => ({country, cert: certs[0].trim().replaceAll(" ", "") })) // by this point we assume each country only has 1 cert. cast certs[0] => cert
-				.filter((cert, i, arr) => arr.length > 1 && !countriesBlacklist.includes(cert.country) ) // filter out blacklist countries, but not if they're the last ones
-				.map(({country, cert}) => ({country, cert, value: assignStandardValue(cert)})) // assign standard values
-				.filter(cert => { if (!tempCertsForFilter.includes(cert.value) && cert.value !== null) { tempCertsForFilter.push(cert.value); return true; } else { return false; } }) // filter out not unique values by cert
-				.sort((cert1, cert2) => cert1.value - cert2.value) // sort by value
+				.filter((cert) => cert.certs.length > 0 ) //filter out countries with no certifications
+				.map(({country, certs}) => ({country, cert: certs[0].trim().replaceAll(" ", "") })) //cast certs[0] to cert
 
-				// TODO fix old walking tall with R rating somewhere getting lost idk
-				
-				if (certs.length > 0) median = certs[Math.floor((certs.length - 1) / 2)]; // middle out of sorted array
-				console.log(certs, relDates.results)
 			} else if (mode === 'tv') {
-				certs = [] //TODO add shows support
+				certs = initialArray.map(result => ({ country: result["iso_3166_1"], cert: result["rating"] }))
+
+			} else { return initialArray }
+
+			return certs
+				.filter((cert, i, arr) => arr.length > 0 && !countriesBlacklist.includes(cert.country) ) // filter out blacklist countries, but not if they're the last rating left
+				.map(({country, cert}) => ({country, cert, value: assignStandardValue(cert)})) // assign standard values
+				.filter(cert => { // filter out not unique values by cert
+					if (cert.value !== null) { // US rating has priority in duplicate ratings
+						if (tempCertsForFilter.includes(cert.value) && cert.country === "US") tempCertsForFilter.splice(tempCertsForFilter.findIndex(i => i.value === cert.value), 1)
+						if (!tempCertsForFilter.includes(cert.value)) { tempCertsForFilter.push(cert.value); return true; }
+					} else { return false; }
+				})
+				.sort((cert1, cert2) => cert2.value - cert1.value ) // sort by value
+		}
+
+        let certs = []
+		let median = { country: "US", cert: "NR", value: null }
+        if (typeof relDates !== "undefined" && relDates.length > 0) {
+			if (mode === 'movie' || mode === 'tv') {
+				certs = processCertifications(relDates, mode)
+
+				if (certs.length > 0) {
+					const usIndex = certs.findIndex(i => i.country === "US")
+					if (usIndex !== -1) {
+						median = certs[usIndex]
+					} else {
+						median = certs[Math.floor((certs.length - 0) / 2)]; // middle out of sorted array
+					}
+				}
+			} else {
+				console.error("unknown mode: ", mode)
 			}
         }
 
-		console.log(median)
+		console.log("certs and median: ", certs, median)
         if (median.cert !== "NR" && median.value !== null) {
 			document.getElementById("details-type-length").dataset.ratingColor = median.value // to be referenced in css
-            return `<span title="${formatCerts(median, certs)}">${median.value === 21 ? median.cert : median.value}</span>`
+            return `<span title="${formatCerts(median, certs)}">${formatMedian(median)}</span>`
         } else {
 			document.getElementById("details-type-length").dataset.ratingColor = -1
             return `<span title="No age rating information available">N/A</span>`
@@ -488,10 +527,12 @@ function assignStandardValue(cert) {
 		case "18+":
 		case "R-18":
 		case "N-18":
+		case "TV-MA":
 			return 18
 		case "NC-17":
 		case "18A":
 		case "17":
+		case "SPG":
 			return 17
 		case "R":
 		case "16+":
@@ -507,6 +548,7 @@ function assignStandardValue(cert) {
 			return 15
 		case "14A":
 		case "14":
+		case "TV-14":
 			return 14
 		case "PG-13":
 		case "13+":
@@ -514,6 +556,7 @@ function assignStandardValue(cert) {
 		case "R-13":
 		case "N-13":
 		case "PG13":
+		case "TV-PG":
 			return 13
 		case "12":
 		case "UA":
@@ -530,9 +573,11 @@ function assignStandardValue(cert) {
 			return 9
 		case "7":
 		case "N-7":
+		case "TV-Y7":
 			return 7
 		case "6":
 		case "6+":
+		case "Children":
 			return 6
 		case "U":
 		case "V":
@@ -542,8 +587,13 @@ function assignStandardValue(cert) {
 		case "0+":
 		case "0":
 		case "AL":
+		case "ALL":
+		case "Unrated":
+		case "TV-Y":
+		case "TV-G":
 			return 0
 		case "NR":
+		case "Exempt":
 		default:
 			return null
 	}
