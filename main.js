@@ -327,9 +327,10 @@ async function renderDetails(info, card, restype) {
 				return median.value
 			}
 		}
+
 		// main certification processing unit
 		function processCertifications(initialArray, mode) {
-			console.log("certs: ", initialArray)
+			//console.log("certs: ", initialArray)
 			const tempCertsForFilter = []
 			let certs = []
 			if (mode === 'movie') {
@@ -400,7 +401,7 @@ async function renderDetails(info, card, restype) {
 			const movieLength  = `${Math.floor(runtime / 60)}h ${runtime % 60}min`
 			return `${prepend}<strong>${type}</strong> &bull; ${movieLength}`
 		} else if (restype === 'tv') {
-			return `${prepend}<strong>${type}</strong> &bull; <strong>Seasons:</strong> ${getSeasons()}`
+			return `${prepend}<strong>${type}</strong> &bull; <em>${obj.status}</em> <br> <strong>Seasons:</strong> ${getSeasons()}`
 		} else {
 			return `${prepend}Other &bull; No info`
 		}

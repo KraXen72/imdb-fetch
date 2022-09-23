@@ -115,6 +115,16 @@ html {
     text-align: center;
     padding-top: 1rem;
 }
+#footer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	line-height: 16px;
+	font-size: 16px;
+}
+#footer a { margin: 0 5px } 
+#footer #tmdb-img { opacity: 0.25; transition: opacity 0.2s ease-in-out; }
+#footer #tmdb-img:hover { opacity: 1; }
 #nothing img {
     width: 30%;
     height: 30%;
