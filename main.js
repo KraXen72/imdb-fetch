@@ -1,5 +1,11 @@
 const imgNA = 'placeholder.jpg'
+
+// https://github.com/odyniec/tinyAgo-js
+function ago(v){v=0|(Date.now()-v)/1e3;var a,b={second:60,minute:60,hour:24,day:7,week:4.35,month:12,year:1e4},c;for(a in b){c=v%b[a];if(!(v=0|v/b[a]))return c+' '+(c-1?a+'s':a)}}
+function agofromnow(v) { if (v > Date.now()) { return 'in ' + ago(2 * Date.now() - v); } else { return ago(v) + ' ago'; } }
+
 let lastFuncName = ""
+let cachedOMDbResponses = {}
 
 document.addEventListener('DOMContentLoaded', () => {
     let inp = document.getElementById('search')
@@ -82,6 +88,21 @@ const api = {
 			const url = new URL(`https://api.themoviedb.org/3/${type}/${TMDBid}`)
 			url.search = new URLSearchParams({...this._params, "append_to_response": type === "movie" ? "release_dates" : "content_ratings", ...params}).toString()
 			console.log("details", url)
+
+			return await safeJSONRequest(url)
+		}
+	},
+	omdb: {
+		_params : {
+			// same thing applies here as the above api key. user rickylawson's freekeys or apply for your own key, you'll get it quickly
+			// this api key is request-limited to 1000 requests per day. Either sub to their paetron or handle negative responses
+			"apikey": "2deceaec", r: "json"
+		},
+		async findByID(imdbID, params) {
+			if (typeof imdbID === "undefined") { console.error("invalid id: ", imdbID); return void 0 }
+			console.warn("[expensive] api call to OMDb (max 1000 per day)")
+			const url = new URL(`https://www.omdbapi.com/`)
+			url.search = new URLSearchParams({...this._params, "i": imdbID, ...params}).toString()
 
 			return await safeJSONRequest(url)
 		}
@@ -221,6 +242,29 @@ function genResultCard(result) {
 
 async function renderDetails(info, card, restype) {
     let obj = await api.tmdb.details(restype, info.resid)
+	function updateExternalRatings(OMDbResult) {
+		if (OMDbResult) {
+			const RottenRating = OMDbResult.Ratings.find(res => res.Source.startsWith("Rotten"))
+			const MetaRating = OMDbResult.Ratings.find(res => res.Source === "Metacritic")
+
+			update("imdb-rating", OMDbResult.imdbRating || "-")
+			if (RottenRating) update("rotten-rating", RottenRating.Value.replace("%", "") || "-"); else update("rotten-rating", "-");
+			if (MetaRating) update("metacritic-rating", MetaRating.Value.split("/")[0] || "-"); else update("metacritic-rating", "-");
+		} else {
+			update("imdb-rating", "-")
+			update("rotten-rating", "-")
+			update("metacritic-rating", "-")
+		}
+	}
+
+	if (info.imdbID in cachedOMDbResponses) {
+		updateExternalRatings(cachedOMDbResponses[info.imdbID])
+	} else {
+		updateExternalRatings(void 0)
+		api.omdb.findByID(info.imdbID).then(res => { cachedOMDbResponses[info.imdbID] = res; updateExternalRatings(res) })
+	}
+	
+
 	console.log(`[${restype}] details: `, obj)
 
     let details = document.getElementById('details-screen')
@@ -234,7 +278,7 @@ async function renderDetails(info, card, restype) {
 	} else {
 		update('details-type-length', generateLine2(getPG([])))
 	}
-    update('details-overview', obj.overview)
+    update('details-overview', `${obj.tagline ? `<em style="margin-bottom: 0.3rem; display: inline-block;">${obj.tagline}</em><br>`:""}${obj.overview}`)
     // update('details-pg', getPG(obj.release_dates))
     updateImages()
 
@@ -394,14 +438,21 @@ async function renderDetails(info, card, restype) {
 		let runtime = obj.runtime ?? ""
 		runtime = runtime === 0 ? "" : runtime
 		const type = restype === 'movie' ? 'Movie' : restype === 'tv' ? 'Tv series' : 'Other'
-
 		const prepend = `<span id="details-pg">${pgString}</span>`
 
 		if (restype === 'movie') {
 			const movieLength  = `${Math.floor(runtime / 60)}h ${runtime % 60}min`
 			return `${prepend}<strong>${type}</strong> &bull; ${movieLength}`
 		} else if (restype === 'tv') {
-			return `${prepend}<strong>${type}</strong> &bull; <em>${obj.status}</em> <br> <strong>Seasons:</strong> ${getSeasons()}`
+			const epInfo = []
+			if (obj.last_episode_to_air !== null) epInfo.push(`Last EP: <span title="${obj.last_episode_to_air.air_date}">${agofromnow(new Date(obj.last_episode_to_air.air_date))}</span>`)
+			if (obj.next_episode_to_air !== null) epInfo.push(`Next EP: <span title="${obj.next_episode_to_air.air_date}">${agofromnow(new Date(obj.next_episode_to_air.air_date))}</span>`)
+			// ${epInfo.length === 1 ? `&bull; ${epInfo[0]}`:""}
+			return `${prepend}<strong title="Type">${type}</strong> 
+			&bull; <em title="Status">${obj.status}</em>
+			&bull; <span title="Episode length">${obj.episode_run_time[0]}min</span>
+			${epInfo.length > 0 ? `<br>${epInfo.join(" &bull; ")}` : ""}
+			<br> <strong>Seasons:</strong> ${getSeasons()}`
 		} else {
 			return `${prepend}Other &bull; No info`
 		}
@@ -423,7 +474,8 @@ async function renderDetails(info, card, restype) {
     }
     function getTitle(mode) {
         if (mode === "full") {
-            return `${restype === 'movie' ? obj.title : restype === 'tv' ? obj.name : "couldn't get title.."} <span id="details-year">(${card.querySelector('.year').textContent})</span>`
+            return `<span ${obj.original_name ? `title="${obj.original_name}"`:""}>${restype === 'movie' ? obj.title : restype === 'tv' ? obj.name : "(No Title)"}</span>
+			<span id="details-year">(${card.querySelector('.year').textContent})</span>`
         } else if (mode === "plain") {
             return `${restype === 'movie' ? obj.title : restype === 'tv' ? obj.name : ""}`
         }
@@ -512,7 +564,7 @@ async function processTMDB(imdbres, card) {
 	viewbtn.onclick = () => { cardUtil.fancyLinkOpen(`https://www.themoviedb.org/${restype}/${finalRes.id}`) }
 	copybtn.onclick = () => { cardUtil.copyToClipboard(finalRes.id) }
 
-	detbtn.onclick = () => { renderDetails({ restype, "resid": finalRes.id, "v": imdbres.v ?? "404" }, card, restype) }
+	detbtn.onclick = () => { renderDetails({ restype, "resid": finalRes.id, "v": imdbres.v ?? "404", imdbID: imdbres.id }, card, restype) }
 }
 
 /** assign a numerical value to different country ratings/certifications so they can be easily sorted */

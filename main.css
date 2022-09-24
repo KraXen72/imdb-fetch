@@ -139,7 +139,7 @@ html {
 .card-hover {
     opacity: 0;
     position: absolute;
-    background: #262626d5;
+    background: #1b1b1be7;
     transition: opacity 0.2s;
     z-index: 2;
     width: 100%;
@@ -195,12 +195,10 @@ html {
     border-color: rgba(var(--matter-onsurface-rgb, 0, 0, 0), 0.24);
 }
 .poster:hover .poster-img {
-    filter: blur(0.8rem);
-    -webkit-filter: blur(0.8rem);
-}
+    opacity: 0.5;
+} 
 .poster.noblur:hover .poster-img {
-    filter: blur(0);
-    -webkit-filter: blur(0);
+    opacity: 0.5;
 }
 .poster:hover {
     overflow: hidden;
@@ -240,7 +238,7 @@ html {
 }
 #details-header-content {
     display: grid;
-    grid-template: 15rem repeat(5, min-content) 1fr / 10.4rem 1fr;
+    grid-template: 15rem repeat(6, min-content) 1fr / 10.4rem 1fr;
 	grid-template-areas: 
 	"close bg"
 	"poster title"
@@ -248,7 +246,8 @@ html {
 	"poster tags"
 	"poster description"
 	"nothing description"
-	"rating-buttons description";
+	"rating-buttons description"
+	"external-ratings description";
     column-gap: 1rem;
     padding: 1rem;
     height: 100%;
@@ -338,6 +337,7 @@ html {
 	height: 100%;
     max-height: 15rem;
     overflow-y: scroll;
+	margin-top: 0.7rem;
 }
 #details-rating-wrapper {
 	grid-area: rating-buttons;
@@ -355,6 +355,38 @@ html {
 	align-items: center;
 	justify-content: start;
 }
+#details-external-ratings {
+	grid-area: external-ratings;
+	margin-top: 1rem;
+	height: 50px;
+	
+	display: grid;
+	column-gap: 0.5rem;
+	row-gap: 0;
+
+	grid-template: 1fr min-content / repeat(3, 1fr);
+	grid-template-areas: 
+	"imdb-r rotten-r meta-r"
+	"imdb-l rotten-l meta-l";
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+}
+
+#imdb-rating { grid-area: imdb-r; }
+#rotten-rating { grid-area: rotten-r; }
+#metacritic-rating { grid-area: meta-r; }
+
+#imdb-rating,
+#rotten-rating,
+#metacritic-rating {
+	font-family: 'Courier New', monospace;
+	font-weight: bolder;
+	font-size: 24px;
+	line-height: 24px;
+	padding-top: 0.15rem;
+}
+
 .details-spacer {
     margin: 0 0.5rem;
 }
@@ -570,7 +602,7 @@ html {
         grid-column: 1 / 2;
     }
     #main-grid.details-open #details-header-content {
-		grid-template: 3rem minmax(249.58px, min-content) repeat(5, min-content) 1fr / 1fr;
+		grid-template: 3rem minmax(249.58px, min-content) repeat(6, min-content) 1fr / 1fr;
         grid-template-areas: 
 		"close"
 		"poster"
@@ -578,6 +610,7 @@ html {
 		"line2"
 		"tags"
 		"rating-buttons"
+		"external-ratings"
 		"description";
     }
 	#main-grid.details-open #details-rating-wrapper {
@@ -606,8 +639,8 @@ html {
         top: 19.9rem;
 		position: absolute !important;
     }
-	#details-backdrop-fade {
+	/* #details-backdrop-fade {
 		height: 14rem;
-	}
+	} */
 }
 
