@@ -276,6 +276,7 @@ async function renderDetails(info, card, restype) {
 		}
 	}
 
+	/** get videos, filter => trailers and update trailer btn */
 	function processVideosAndUpdateButton(videosObj) {
 		const videos = videosObj.results
 		if (videos.length === 0) return;
