@@ -287,16 +287,16 @@ async function renderDetails(info, card, restype) {
 		if (trailers.length > 0 && trailers.filter(t => t.official || t.name.toLowerCase().includes("official") ).length > 0) {
 			trailers = trailers.filter(t => t.official || t.name.toLowerCase().includes("official"))
 		}
-		// https://stackoverflow.com/questions/12192491/sort-array-by-iso-8601-date#12192544 (but inverted)
+		// sorting algo is from https://stackoverflow.com/questions/12192491/sort-array-by-iso-8601-date#12192544 (but inverted)
 		trailers
 			.filter(trailer => trailer.iso_639_1 === "en")
-			.sort((a, b) => (a.published_at < b.published_at) ? 1 : ((a.published_at > b.published_at) ? -1 : 0))
-		console.log("trailers", trailers)
+			.sort((a, b) => (a.published_at < b.published_at) ? 1 : ((a.published_at > b.published_at) ? -1 : 0)) 
+		console.log("filtered & sorted trailers", trailers)
 
 		if (trailers.length > 0) {
 			const trailer = trailers[0]
 			if (trailer.site === "YouTube") document.getElementById('trailerbtn').onclick = () => { cardUtil.fancyLinkOpen(`https://www.youtube.com/watch?v=${trailer.key}`) }
-		}
+		} else { console.log("no satisfactory trailers. all videos:", videos) }
 	}
 	api.tmdb.genericRequest(restype, info.resid, "videos").then(result => processVideosAndUpdateButton(result))
 
