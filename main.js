@@ -185,7 +185,10 @@ function renderResults(obj) {
 	}
 }
 
-//get the html for a result card
+
+// each result is typeof { i: [string, number, number], id: string, l: string, q: string, qid: string, s: string, y: number }
+// which corresponds to: { i: [image url, width, height], id: imdbID, l: title, q: type(tv/mov), qid: tvSeries/movie, y: year of release }
+/** get the html for a result card */
 function genResultCard(result) {
 	let resultsDiv = document.getElementById("results")
 
