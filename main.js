@@ -12,21 +12,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	inp.onkeydown = debounce(() => { //search query
 		if (inp.value !== "") {
-			let funcname = encodeURIComponent(inp.value.toString().trim().replaceAll("%20", " ").replaceAll(' ', "_").replaceAll('-', "_").toLowerCase())
+			let funcname =  inp.value.toString().trim()
+				.replaceAll('-', " ") // replace invalid
+				.replace(" ", "_") // first space can be a _
+				.replaceAll(" ", "") // all remaining spaces need to be yeeted because stupid IMDb fix ur api.
+				.toLowerCase()
 			console.log("query: ", inp.value, "funcname: ", funcname)
 
-			window[`imdb$${funcname}`] = function (results) {
-				renderResults(results)
-			};
-			try { //try to delete all old imdb functions so i don't pollute window
-				delete window[lastFuncName];
-			} catch (e) { }
+			window[`imdb$${funcname}`] = renderResults
+			//try to delete all old imdb functions so i don't pollute window
+			try { delete window[lastFuncName]; } catch (e) { }
 			lastFuncName = funcname;
 
 			//try to delete any previous functions so i don't pollute head with script tags
 			[...document.querySelectorAll('.imdb-request')].forEach(node => node.remove())
 			//i am so proud that i managed to use the official, key-less imdb api, despite it being json-p
-			addScript(`https://sg.media-imdb.com/suggests/${funcname.substring(0, 1)}/${funcname}.json`);
+			// 2022 update: this api sucks literal balls.
+			// it's CORS, JSON-P, does not provide a custom callback param and returns invalid function names for queries with > 1 space
+			addScript(`https://sg.media-imdb.com/suggests/${funcname.slice(0, 1)}/${encodeURIComponent(funcname)}.json`);
 		} else {
 			document.getElementById("results").innerHTML = `<div id="nothing"><img src="dude_chillin.svg" alt="" draggable="false"><div>IMDb movie search</div></div>`
 		}
@@ -447,10 +450,11 @@ async function renderDetails(info, card, restype) {
 			const epInfo = []
 			if (obj.last_episode_to_air !== null) epInfo.push(`Last EP: <span title="${obj.last_episode_to_air.air_date}">${agofromnow(new Date(obj.last_episode_to_air.air_date))}</span>`)
 			if (obj.next_episode_to_air !== null) epInfo.push(`Next EP: <span title="${obj.next_episode_to_air.air_date}">${agofromnow(new Date(obj.next_episode_to_air.air_date))}</span>`)
-			// ${epInfo.length === 1 ? `&bull; ${epInfo[0]}`:""}
+			const epRunTime = obj.episode_run_time.length > 0 ? ` &bull; <span title="Episode length">${obj.episode_run_time[0]}min</span>` : ""
+
 			return `${prepend}<strong title="Type">${type}</strong> 
 			&bull; <em title="Status">${obj.status}</em>
-			&bull; <span title="Episode length">${obj.episode_run_time[0]}min</span>
+			${epRunTime}
 			${epInfo.length > 0 ? `<br>${epInfo.join(" &bull; ")}` : ""}
 			<br> <strong>Seasons:</strong> ${getSeasons()}`
 		} else {
