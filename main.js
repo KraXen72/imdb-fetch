@@ -279,7 +279,6 @@ async function renderDetails(info, card, restype) {
 	function processVideosAndUpdateButton(videosObj) {
 		const videos = videosObj.results
 		if (videos.length === 0) return;
-		// let trailers = videos.filter(video => video.name.toLowerCase().includes("trailer"))
 		let trailers = videos.filter(video => video.type === "Trailer")
 		if (trailers.length === 0) return;
 
