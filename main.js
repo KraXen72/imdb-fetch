@@ -93,6 +93,18 @@ const api = {
 			console.log("details", url)
 
 			return await safeJSONRequest(url)
+		},
+		/** generic tmbd api requrest. for example "videos" */
+		async genericRequest(type, TMDBid, route, params) {
+			if (typeof TMDBid === "undefined") { console.error("invalid id: ", TMDBid); return void 0 }
+			if (typeof type === "undefined") { console.error("invalid type: ", type); ; return void 0 }
+			if (typeof route === "undefined" || route.trim() === "") { console.error("invalid route: ", route); ; return void 0 }
+
+			const url = new URL(`https://api.themoviedb.org/3/${type}/${TMDBid}/${route}`)
+			url.search = new URLSearchParams({ ...this._params, "append_to_response": type === "movie" ? "release_dates" : "content_ratings", ...params }).toString()
+			console.log("details", url)
+
+			return await safeJSONRequest(url)
 		}
 	},
 	omdb: {
@@ -248,6 +260,7 @@ function genResultCard(result) {
 
 async function renderDetails(info, card, restype) {
 	let obj = await api.tmdb.details(restype, info.resid)
+
 	function updateExternalRatings(OMDbResult) {
 		if (OMDbResult) {
 			const RottenRating = OMDbResult.Ratings.find(res => res.Source.startsWith("Rotten"))
@@ -263,13 +276,36 @@ async function renderDetails(info, card, restype) {
 		}
 	}
 
+	function processVideosAndUpdateButton(videosObj) {
+		const videos = videosObj.results
+		if (videos.length === 0) return;
+		// let trailers = videos.filter(video => video.name.toLowerCase().includes("trailer"))
+		let trailers = videos.filter(video => video.type === "Trailer")
+		if (trailers.length === 0) return;
+
+		// if we can afford it, only include official trailers
+		if (trailers.length > 0 && trailers.filter(t => t.official || t.name.toLowerCase().includes("official") ).length > 0) {
+			trailers = trailers.filter(t => t.official || t.name.toLowerCase().includes("official"))
+		}
+		// https://stackoverflow.com/questions/12192491/sort-array-by-iso-8601-date#12192544 (but inverted)
+		trailers
+			.filter(trailer => trailer.iso_639_1 === "en")
+			.sort((a, b) => (a.published_at < b.published_at) ? 1 : ((a.published_at > b.published_at) ? -1 : 0))
+		console.log("trailers", trailers)
+
+		if (trailers.length > 0) {
+			const trailer = trailers[0]
+			if (trailer.site === "YouTube") document.getElementById('trailerbtn').onclick = () => { cardUtil.fancyLinkOpen(`https://www.youtube.com/watch?v=${trailer.key}`) }
+		}
+	}
+	api.tmdb.genericRequest(restype, info.resid, "videos").then(result => processVideosAndUpdateButton(result))
+
 	if (info.imdbID in cachedOMDbResponses) {
 		updateExternalRatings(cachedOMDbResponses[info.imdbID])
 	} else {
 		updateExternalRatings(void 0)
 		api.omdb.findByID(info.imdbID).then(res => { cachedOMDbResponses[info.imdbID] = res; updateExternalRatings(res) })
 	}
-
 
 	console.log(`[${restype}] details: `, obj)
 
