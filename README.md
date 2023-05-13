@@ -16,6 +16,11 @@ also has mobile ui: (outdated screenshot but i cannot be bothered to re-make it 
 - [themoviedb.org](https://www.themoviedb.org) TMDB api - used to fetch most info about the movie/show
 - [OMDb api](http://www.omdbapi.com) request-limited api used to get IMDB, rotten and metacritic scores.
 - thanks to [this pen on codepen](https://codepen.io/magdielikari/pen/KKmmjWo) for circular progress
+
+### support development
+[![Recurring donation via Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/KraXen72)
+[![One-time donation via ko-fi.com](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/kraxen72)  
+Any donations are highly appreciated! <3
   
 ### notes
 - i wrote this fully client side webapp in summer 2021, used it on and off for the following year
