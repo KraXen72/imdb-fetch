@@ -1,0 +1,31 @@
+{
+	"name": "imdb-fetch",
+	"version": "2.0.0",
+	"description": "small imdb/tmbd movie app",
+	"main": "src/main.ts",
+	"scripts": {
+		"start": "vite",
+		"dev": "vite",
+		"build": "vite build",
+		"serve": "vite preview"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/KraXen72/imdb-fetch.git"
+	},
+	"author": "KraXen72",
+	"bugs": {
+		"url": "https://github.com/KraXen72/imdb-fetch/issues"
+	},
+	"homepage": "https://github.com/KraXen72/imdb-fetch#readme",
+	"license": "MIT",
+	"devDependencies": {
+		"solid-devtools": "^0.29.2",
+		"typescript": "^5.3.3",
+		"vite": "^5.0.11",
+		"vite-plugin-solid": "^2.8.2"
+	},
+	"dependencies": {
+		"solid-js": "^1.8.11"
+	}
+}
