@@ -298,7 +298,14 @@ async function renderDetails(info, card, restype) {
 			if (trailer.site === "YouTube") document.getElementById('trailerbtn').onclick = () => { cardUtil.fancyLinkOpen(`https://www.youtube.com/watch?v=${trailer.key}`) }
 		} else { console.log("no satisfactory trailers. all videos:", videos) }
 	}
-	api.tmdb.genericRequest(restype, info.resid, "videos").then(result => processVideosAndUpdateButton(result))
+	function processCreditsAndRenderCast(creditsObj) {
+		// i'll impl this later lmao
+		// gotta rw in typescript and a ui-framework like solid or something anyway...
+		console.log(creditsObj)
+	}
+
+	api.tmdb.genericRequest(restype, info.resid, "videos").then(processVideosAndUpdateButton)
+	// api.tmdb.genericRequest(restype, info.resid, "credits").then(processCreditsAndRenderCast)
 
 	if (info.imdbID in cachedOMDbResponses) {
 		updateExternalRatings(cachedOMDbResponses[info.imdbID])
@@ -424,7 +431,7 @@ async function renderDetails(info, card, restype) {
 					const country = result["iso_3166_1"]
 					const certifications = result["release_dates"]
 					// remove duplicates by casting arr => set => arr, filter "" out of the array
-					return { country, certs: [...new Set([...certifications.map(c => c.certification)])].filter(c => c !== "") }
+					return { country, certs: [...new Set(certifications.map(c => c.certification))].filter(c => c !== "") }
 				})
 					.filter((cert) => cert.certs.length > 0) //filter out countries with no certifications
 					.map(({ country, certs }) => ({ country, cert: certs[0].trim().replaceAll(" ", "") })) //cast certs[0] to cert
@@ -575,7 +582,10 @@ async function processTMDB(imdbres, card) {
 		restype = 'other'
 	}
 
-	if (res === { 'movie_results': [], 'tv_results': [] }) res = "404"
+	if (
+		Array.isArray(res['movie_results']) && res['movie_results'].length === 0 &&
+		Array.isArray(res['tv_results']) && res['tv_results'].length === 0
+	) res = "404"
 
 	let finalRes = '404'
 	if (restype === "movie" && res['movie_results'].length > 0) {
