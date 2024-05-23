@@ -8,8 +8,7 @@ export default function SearchBar() {
           name="search"
           id="search"
           autocomplete="off"
-        >
-        </input>
+        ></input>
         <span class="noselect">Search for movie/show by title or imdb id</span>
       </label>
     </div>

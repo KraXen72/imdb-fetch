@@ -1,3 +1,5 @@
+import tmdblogo from '../assets/tmdb_attribution_logo.svg'
+
 export default function Footer() {
 	return <div id="footer">
 		<span>Made by KraXen72.</span>
@@ -6,11 +8,10 @@ export default function Footer() {
 		<span>&nbsp;and&nbsp;</span>
 		<a href="http://www.themoviedb.org">
 			<img 
-				src="tmdb_attribution_logo.svg" 
+				src={tmdblogo} 
 				alt="tmdb / www.themoviedb.org" 
 				height="16px" 
-				id="tmdb-img" >
-			</img>
+				id="tmdb-img" ></img>
 		</a>
 		<span>api.</span>
 	</div>
