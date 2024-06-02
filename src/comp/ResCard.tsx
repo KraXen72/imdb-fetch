@@ -6,9 +6,9 @@ import { copyToClipboard, fancyLinkOpen } from "../lib/util";
 // TODO reimpl placeholder.png
 
 export default function ResCard(props: IMDBWork) {
-	const [ulq, s_ulq] = createSignal(true)
-	const [lq, s_lq] = createSignal(false)
-	const [hq, s_hq] = createSignal(false)
+	const [show_ulq, s_ulq] = createSignal(true)
+	const [show_lq, s_lq] = createSignal(false)
+	const [show_hq, s_hq] = createSignal(false)
 	
 	let hqLoaded = false
 	const subtitle = typeof props.q === 'undefined'
@@ -23,12 +23,12 @@ export default function ResCard(props: IMDBWork) {
 			<div class="poster" imdb-id={props.id}>
 				<img src={getImgOfQuality(props.i, "ulq")}
 					class={`poster-img ulq ${containCover(props.i)}`}
-					hidden={!ulq()}
+					hidden={!show_ulq()}
 					draggable="false"
 				></img>
 				<img src={getImgOfQuality(props.i, "lq")}
 					class={`poster-img lq ${containCover(props.i)}`}
-					hidden={!lq()}
+					hidden={!show_lq()}
 					onLoad={() => {
 						if (hqLoaded) return;
 						s_lq(true)
@@ -38,7 +38,7 @@ export default function ResCard(props: IMDBWork) {
 				></img>
 				<img src={getImgOfQuality(props.i, "hq")}
 					class={`poster-img hq ${containCover(props.i)}`}
-					hidden={!hq()}
+					hidden={!show_hq()}
 					onLoad={() => {
 						hqLoaded = true;
 						s_hq(true)
@@ -63,7 +63,6 @@ export default function ResCard(props: IMDBWork) {
 				<span class="noselect"> &bull; </span>
 				<span class="imdbID" id={`imdbid-${props.id}`}>{props.id}</span>
 			</div>
-			<a href={`https://imdb.com/title/${props.id}/`} hidden class="poster-open" target="_blank">view on imdb</a>
 		</div>
 	)
 }
