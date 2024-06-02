@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@solid-primitives/scheduled':
+        specifier: ^1.4.3
+        version: 1.4.3(solid-js@1.8.17)
       solid-js:
         specifier: ^1.8.11
         version: 1.8.17

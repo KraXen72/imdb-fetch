@@ -7,12 +7,13 @@ export default function Footer() {
 		<span>Uses the IMDb suggests API</span>
 		<span>&nbsp;and&nbsp;</span>
 		<a href="http://www.themoviedb.org">
-			<img 
-				src={tmdblogo} 
-				alt="tmdb / www.themoviedb.org" 
-				height="16px" 
+			<img
+				src={tmdblogo}
+				alt="tmdb / www.themoviedb.org"
+				height="16px"
 				id="tmdb-img" ></img>
 		</a>
 		<span>api.</span>
 	</div>
 }
+
