@@ -1,92 +1,69 @@
 import type { IMDBWork } from "../lib/types";
+import { getImgOfQuality, containCover } from "../lib/img";
+import { createSignal } from "solid-js";
+import { copyToClipboard, fancyLinkOpen } from "../lib/util";
 
+// TODO reimpl placeholder.png
 
 export default function ResCard(props: IMDBWork) {
-	return <div>
-		<span>{props.l}</span>
-	</div>
+	const [ulq, s_ulq] = createSignal(true)
+	const [lq, s_lq] = createSignal(false)
+	const [hq, s_hq] = createSignal(false)
+	
+	let hqLoaded = false
+	const subtitle = typeof props.q === 'undefined'
+		? 'unknown'
+		: props.q === "feature"
+		? 'movie'
+		: props.q.toLowerCase()
+
+	// 	processTMDB(result, rCard) //tmdb onclicks get applied after append
+	return (
+		<div class="result-card">
+			<div class="poster" imdb-id={props.id}>
+				<img src={getImgOfQuality(props.i, "ulq")}
+					class={`poster-img ulq ${containCover(props.i)}`}
+					hidden={!ulq()}
+					draggable="false"
+				></img>
+				<img src={getImgOfQuality(props.i, "lq")}
+					class={`poster-img lq ${containCover(props.i)}`}
+					hidden={!lq()}
+					onLoad={() => {
+						if (hqLoaded) return;
+						s_lq(true)
+						s_ulq(false)
+					}}
+					draggable="false"
+				></img>
+				<img src={getImgOfQuality(props.i, "hq")}
+					class={`poster-img hq ${containCover(props.i)}`}
+					hidden={!hq()}
+					onLoad={() => {
+						hqLoaded = true;
+						s_hq(true)
+						s_lq(false)
+						s_ulq(false)
+					}}
+					draggable="false"
+				></img>
+				<div class="card-hover">
+					<button class="matter-button-outlined vimdb" onClick={() => fancyLinkOpen(`https://imdb.com/title/${props.id}/`)}>imdb</button>
+					<button class="matter-button-outlined cimdb" onClick={() => copyToClipboard(props.id)}>copy ID</button>
+					<button class="matter-button-outlined vtmdb">tmdb</button>
+					<button class="matter-button-outlined ctmdb">copy ID</button>
+					<hr class="hr-text csep"></hr>
+					<button class="matter-button-outlined details">details</button>
+					<div class="type matter-subtitle1">{subtitle}</div>
+				</div>
+			</div>
+			<strong class="title" title={props.l}>{props.l}</strong>
+			<div class="year-and-id">
+				<span class="year" id={`year-${props.id}`}>{props.y ?? "N/A"}</span>
+				<span class="noselect"> &bull; </span>
+				<span class="imdbID" id={`imdbid-${props.id}`}>{props.id}</span>
+			</div>
+			<a href={`https://imdb.com/title/${props.id}/`} hidden class="poster-open" target="_blank">view on imdb</a>
+		</div>
+	)
 }
-
-// function renderResults(obj) {
-// 	let resultsDiv = document.getElementById("results")
-// 	resultsDiv.innerHTML = ``
-// 	if (obj.d !== undefined) {
-// 		obj.d = obj.d.filter(result => {
-// 			return result.id.slice(0, 2) !== "nm"
-// 				&& !result.id.includes('/')
-// 				&& !result.qid !== "musicvideo"
-// 		})
-// 	}
-
-// 	if (obj.d === undefined || obj.d.length === 0) {
-// 		resultsDiv.innerHTML = `<div id="nothing"><img src="nothing_found.svg" alt="" draggable="false"><div>Nothing found</div></div>`
-// 	} else {
-// 		console.log("cards: ", obj.d)
-// 		for (let i = 0; i < obj.d.length; i++) {
-// 			const result = obj.d[i];
-// 			//only do movies, skip people
-// 			genResultCard(result)
-// 		}
-// 	}
-// }
-
-
-// each result is typeof { i: [string, number, number], id: string, l: string, q: string, qid: string, s: string, y: number }
-// which corresponds to: { i: [image url, width, height], id: imdbID, l: title, q: type(tv/mov), qid: tvSeries/movie, y: year of release }
-/** get the html for a result card */
-// function genResultCard(result) {
-// 	let resultsDiv = document.getElementById("results")
-
-// 	let rCard = document.createElement("div")
-// 	rCard.classList.add("result-card")
-// 	rCard.innerHTML = `
-//     <div class="poster" imdb-id="${result.id}">
-//         <img src="${imgUtil.getImgOfQuality(result.i, "ulq")}" 
-//         class="poster-img ulq ${imgUtil.containCover(result.i, result.i)}" 
-//         onerror="placeholder.png" draggable="false">
-//         <img src="${imgUtil.getImgOfQuality(result.i, "lq")}" 
-//         class="poster-img lq ${imgUtil.containCover(result.i, result.i)}" 
-//         onerror="placeholder.png" draggable="false" style="display: none;">
-//         <img src="${imgUtil.getImgOfQuality(result.i, "hq")}" 
-//         class="poster-img hq ${imgUtil.containCover(result.i, result.i)}" 
-//         onerror="placeholder.png" draggable="false" style="display: none;">
-//         <div class="card-hover">
-//             <button class="matter-button-outlined vimdb">imdb</button>
-//             <button class="matter-button-outlined cimdb">copy ID</button>
-//             <button class="matter-button-outlined vtmdb">tmdb</button>
-//             <button class="matter-button-outlined ctmdb">copy ID</button>
-//             <hr class="hr-text csep">
-//             <button class="matter-button-outlined details">details</button>
-//             <div class="type matter-subtitle1">${result.q !== undefined ? result.q === "feature" ? "movie" : result.q.toLowerCase() : "unknown"}</div>
-//         </div>
-//         <a href="${`https://imdb.com/title/${result.id}/`}" hidden class="poster-open" target="_blank">view on imdb</a>
-//     </div>
-//     <strong class="title" title="${result.l}">${result.l}</strong>
-//     <div class="year-and-id"><span class="year" id="year-${result.id}">${result.y === undefined ? "N/A" : result.y}</span><span class="noselect"> &bull; </span><span class="imdbID" id="imdbid-${result.id}">${result.id}</></div>
-//     `
-// 	const hq = rCard.querySelector('img.poster-img.hq')
-// 	const lq = rCard.querySelector('img.poster-img.lq')
-// 	const ulq = rCard.querySelector('img.poster-img.ulq')
-
-// 	lq.onload = () => {
-// 		lq.style.display = "block";
-// 		ulq.style.display = "none"
-// 		lq.onload = ""
-// 	}
-// 	hq.onload = () => {
-// 		hq.style.display = "block";
-// 		lq.style.display = "none";
-// 		ulq.style.display = "none"
-// 		hq.onload = ""
-// 		lq.onload = ""
-// 	}
-
-// 	//button onclicks. details and copy tba
-// 	rCard.querySelector('.vimdb').onclick = () => { cardUtil.fancyLinkOpen(`https://imdb.com/title/${result.id}/`) }
-// 	rCard.querySelector('.cimdb').onclick = () => { cardUtil.copyToClipboard(result.id) }
-
-// 	resultsDiv.appendChild(rCard)
-
-// 	processTMDB(result, rCard) //tmdb onclicks get applied after append
-
-// }

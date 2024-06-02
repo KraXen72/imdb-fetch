@@ -6,7 +6,7 @@ export interface IMDBAPIResponse {
 
 export interface IMDBWork {
 	/** images */
-	i?:   (number | string)[];
+	i?:   [string, number, number];
 	/** imdb id */
 	id:   string;
 	/** Title */
@@ -20,5 +20,7 @@ export interface IMDBWork {
 	/** year of release */
 	y?:   number;
 }
+
+export type IMDBImg = IMDBWork['i']
 
 

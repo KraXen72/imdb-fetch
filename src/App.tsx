@@ -12,12 +12,15 @@ import { results } from './lib/search';
 
 const App: Component = () => {
   return (
-		<div id="main-grid">
-			<SearchBar />
-			<Results results={results()} query={query()} />
-			<Details />
-			<Footer />
-		</div>
+		<>
+			<div id="main-grid">
+				<SearchBar />
+				<Results results={results()} query={query()} />
+				<Details />
+				<Footer />
+			</div>
+			<input type="text" id="copyinp"/>
+		</>
   );
 };
 
