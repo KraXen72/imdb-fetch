@@ -91,11 +91,11 @@ export default function ResCard(props: IMDBWork) {
 					<hr class="hr-text csep"></hr>
 					<button 
 						class="matter-button-outlined details" 
-						onClick={() => renderDetails({ 
-							data: tmbdDetails()[0], 
-							restype: tmbdDetails()[1], 
-							imdbID: props.id })
-						}
+						onClick={() => {
+							const [det, restype] = tmbdDetails()
+							if (det === '404') return;
+							renderDetails(det, restype, props.id)
+						}}
 						disabled={tmdbButtonDisabled()}
 					>details</button>
 					<div class="type matter-subtitle1">{subtitle}</div>

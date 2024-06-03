@@ -1,17 +1,17 @@
 import { createSignal } from "solid-js"
-import type { DetailsTuple, TMDBWork } from "../lib/types"
+import type { ResType, TMDBInfo, TMDBWork } from "../lib/types"
 import { tmdbAPI } from "../lib/api";
 
-const [tmdbInfo, renderDetails] = createSignal<DetailsTuple>(['404', 'other'])
 const [details, setFullDetails] = createSignal();
 const [showDetails, setDetailsVisibility] = createSignal(false)
-export { renderDetails }
+
+export async function renderDetails(data: TMDBWork, restype: ResType, imdbID: string) {
+	console.log(data)
+	const res = await tmdbAPI.details(restype, data.id.toString())
+	console.log(res)
+}
 
 export default function Details() {
-	if (tmdbInfo()[0] === '404') return; 
-	setFullDetails(tmdbAPI.details(tmdbInfo()[1], (tmdbInfo()[0] as TMDBWork).id.toString()));
-	console.log(details());
-
 	return (
 		<div id="details-screen" hidden={!showDetails()}>
 			<div id="details-header">
