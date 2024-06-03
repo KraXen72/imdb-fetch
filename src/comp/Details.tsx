@@ -1,11 +1,19 @@
 import { createSignal } from "solid-js"
+import type { DetailsTuple, TMDBWork } from "../lib/types"
+import { tmdbAPI } from "../lib/api";
 
-const [details, renderDetails] = createSignal({})
+const [tmdbInfo, renderDetails] = createSignal<DetailsTuple>(['404', 'other'])
+const [details, setFullDetails] = createSignal();
+const [showDetails, setDetailsVisibility] = createSignal(false)
 export { renderDetails }
 
 export default function Details() {
+	if (tmdbInfo()[0] === '404') return; 
+	setFullDetails(tmdbAPI.details(tmdbInfo()[1], (tmdbInfo()[0] as TMDBWork).id.toString()));
+	console.log(details());
+
 	return (
-		<div id="details-screen" hidden>
+		<div id="details-screen" hidden={!showDetails()}>
 			<div id="details-header">
 				<div id="details-backdrop-fade"></div>
 				<div id="details-backdrop-fade-rest"></div>
@@ -14,7 +22,9 @@ export default function Details() {
 					<div id="details-poster-wrapper">
 						<img id="details-poster" draggable="false" src="placeholder.jpg"></img>
 					</div>
-					<h5 id="details-title" class="matter-h4 details-right">Steins;Gate<span id="details-year">(2011)</span> </h5>
+					<h5 id="details-title" class="matter-h4 details-right">
+						Steins;Gate<span id="details-year">(2011)</span>
+					</h5>
 					<div id="details-genres" class="details-right">
 						<span class="details-genre">Comedy</span>
 						<span class="details-genre">Action</span>

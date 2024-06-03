@@ -1,16 +1,21 @@
-import type { IMDBWork } from "../lib/types";
+import type { DetailsTuple, IMDBWork } from "../lib/types";
 import { getImgOfQuality, containCover } from "../lib/img";
 import { createSignal } from "solid-js";
 import { copyToClipboard, fancyLinkOpen } from "../lib/util";
 import { processTMDB } from "../lib/tmdb";
 import { renderDetails } from "./Details";
+import placeholder from '../assets/placeholder.jpg'
 
 // TODO reimpl placeholder.png
 
 export default function ResCard(props: IMDBWork) {
 	const [tmdbButtonDisabled, setTmdbButtonDisabled] = createSignal(false)
-	const [tmbdDetails, setDetails] = createSignal<Awaited<ReturnType<typeof processTMDB>>>(['404', 'other'])
+	const [tmbdDetails, setDetails] = createSignal<DetailsTuple>(['404', 'other'])
 
+	const [ulqSrc, s_ulqSrc] = createSignal(getImgOfQuality(props.i, "ulq"))
+	const [lqSrc, s_lqSrc] = createSignal(getImgOfQuality(props.i, "lq"))
+	const [hqSrc, s_hqSrc] = createSignal(getImgOfQuality(props.i, "hq"))
+	
 	const [show_ulq, s_ulq] = createSignal(true)
 	const [show_lq, s_lq] = createSignal(false)
 	const [show_hq, s_hq] = createSignal(false)
@@ -21,11 +26,6 @@ export default function ResCard(props: IMDBWork) {
 		: props.q === "feature"
 		? 'movie'
 		: props.q.toLowerCase()
-	
-	let handleDetails = () => {} 
-	let tmdbView = () => {}
-	let tmbdCopy = () => {}
-
 	
 	//tmdb onclicks get applied after append
 	processTMDB(props).then(([data, restype]) => {
@@ -40,12 +40,13 @@ export default function ResCard(props: IMDBWork) {
 	return (
 		<div class="result-card">
 			<div class="poster" imdb-id={props.id}>
-				<img src={getImgOfQuality(props.i, "ulq")}
+				<img src={ulqSrc()}
 					class={`poster-img ulq ${containCover(props.i)}`}
 					hidden={!show_ulq()}
 					draggable="false"
+					onError={() => s_ulqSrc(placeholder)}
 				></img>
-				<img src={getImgOfQuality(props.i, "lq")}
+				<img src={lqSrc()}
 					class={`poster-img lq ${containCover(props.i)}`}
 					hidden={!show_lq()}
 					onLoad={() => {
@@ -53,9 +54,10 @@ export default function ResCard(props: IMDBWork) {
 						s_lq(true)
 						s_ulq(false)
 					}}
+					onError={() => s_lqSrc(placeholder)}
 					draggable="false"
 				></img>
-				<img src={getImgOfQuality(props.i, "hq")}
+				<img src={hqSrc()}
 					class={`poster-img hq ${containCover(props.i)}`}
 					hidden={!show_hq()}
 					onLoad={() => {
@@ -64,6 +66,7 @@ export default function ResCard(props: IMDBWork) {
 						s_lq(false)
 						s_ulq(false)
 					}}
+					onError={() => s_hqSrc(placeholder)}
 					draggable="false"
 				></img>
 				<div class="card-hover">

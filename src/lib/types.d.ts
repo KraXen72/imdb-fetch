@@ -51,4 +51,5 @@ export interface TMDBWork {
 }
 
 export type ResType = 'movie' | 'tv' | 'other'
+export type DetailsTuple = [TMDBWork | '404', ResType]
 
