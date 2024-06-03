@@ -1,3 +1,8 @@
+import { createSignal } from "solid-js"
+
+const [details, renderDetails] = createSignal({})
+export { renderDetails }
+
 export default function Details() {
 	return (
 		<div id="details-screen" hidden>

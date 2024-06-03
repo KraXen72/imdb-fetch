@@ -2,10 +2,15 @@ import type { IMDBWork } from "../lib/types";
 import { getImgOfQuality, containCover } from "../lib/img";
 import { createSignal } from "solid-js";
 import { copyToClipboard, fancyLinkOpen } from "../lib/util";
+import { processTMDB } from "../lib/tmdb";
+import { renderDetails } from "./Details";
 
 // TODO reimpl placeholder.png
 
 export default function ResCard(props: IMDBWork) {
+	const [tmdbButtonDisabled, setTmdbButtonDisabled] = createSignal(false)
+	const [tmbdDetails, setDetails] = createSignal<Awaited<ReturnType<typeof processTMDB>>>(['404', 'other'])
+
 	const [show_ulq, s_ulq] = createSignal(true)
 	const [show_lq, s_lq] = createSignal(false)
 	const [show_hq, s_hq] = createSignal(false)
@@ -16,8 +21,22 @@ export default function ResCard(props: IMDBWork) {
 		: props.q === "feature"
 		? 'movie'
 		: props.q.toLowerCase()
+	
+	let handleDetails = () => {} 
+	let tmdbView = () => {}
+	let tmbdCopy = () => {}
 
-	// 	processTMDB(result, rCard) //tmdb onclicks get applied after append
+	
+	//tmdb onclicks get applied after append
+	processTMDB(props).then(([data, restype]) => {
+		// console.log(data)
+		if (data === "404") {
+			setTmdbButtonDisabled(true);
+		} else {
+			setDetails([data, restype])
+		}
+	})
+
 	return (
 		<div class="result-card">
 			<div class="poster" imdb-id={props.id}>
@@ -50,10 +69,32 @@ export default function ResCard(props: IMDBWork) {
 				<div class="card-hover">
 					<button class="matter-button-outlined vimdb" onClick={() => fancyLinkOpen(`https://imdb.com/title/${props.id}/`)}>imdb</button>
 					<button class="matter-button-outlined cimdb" onClick={() => copyToClipboard(props.id)}>copy ID</button>
-					<button class="matter-button-outlined vtmdb">tmdb</button>
-					<button class="matter-button-outlined ctmdb">copy ID</button>
+					<button 
+						class="matter-button-outlined vtmdb" 
+						onClick={() => {
+							const [det, restype] = tmbdDetails()
+							if (det === '404') return;
+							fancyLinkOpen(`https://www.themoviedb.org/${restype}/${det.id}`)
+						}}
+						disabled={tmdbButtonDisabled()}>tmdb</button>
+					<button 
+						class="matter-button-outlined ctmdb" 
+						onClick={() => {
+							const det = tmbdDetails()[0];
+							if (det === '404') return;
+							copyToClipboard(det.id.toString())
+						}}
+						disabled={tmdbButtonDisabled()}>copy ID</button>
 					<hr class="hr-text csep"></hr>
-					<button class="matter-button-outlined details">details</button>
+					<button 
+						class="matter-button-outlined details" 
+						onClick={() => renderDetails({ 
+							data: tmbdDetails()[0], 
+							restype: tmbdDetails()[1], 
+							imdbID: props.id })
+						}
+						disabled={tmdbButtonDisabled()}
+					>details</button>
 					<div class="type matter-subtitle1">{subtitle}</div>
 				</div>
 			</div>

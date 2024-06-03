@@ -1,3 +1,5 @@
+import type { TMBDAPIResponse } from "./types"
+
 async function safeJSONRequest(URLObject: URL) {
 	try {
 		const req = await fetch(URLObject)
@@ -8,8 +10,7 @@ async function safeJSONRequest(URLObject: URL) {
 	}
 }
 
-// TODO narrower param types for api?
-// TODO return types for api
+// TODO deprecate this in favor of moviedb-promise
 
 export const omdbAPI = {
 	_params: {
@@ -35,21 +36,21 @@ export const tmdbAPI = {
 		"api_key": "7248c5cc1f2080c7baf7361d2427fb80",
 		language: "en_US"
 	},
-	async findByID(imdbID: string, params: Record<string, string>) {
+	async findByID(imdbID: string, params: Record<string, string> = {}) {
 		if (typeof imdbID === "undefined") { console.error("invalid id: ", imdbID); return void 0 }
 		const url = new URL(`https://api.themoviedb.org/3/find/${imdbID}`)
 		url.search = new URLSearchParams({ ...this._params, "external_source": "imdb_id", ...params }).toString()
 
-		return await safeJSONRequest(url)
+		return await safeJSONRequest(url) as Promise<TMBDAPIResponse>
 	},
-	async search(name: string, type: string, params: Record<string, string>) { //unused for now lol
+	async search(name: string, type: string, params: Record<string, string> = {}) { //unused for now lol
 		if (typeof name === "undefined" || typeof type === "undefined") { console.error("invalid name: ", name, "or type: ", type); return void 0 }
 		const url = new URL(`https://api.themoviedb.org/3/search/${type}`)
 		url.search = new URLSearchParams({ ...this._params, "query": name, ...params }).toString()
 
 		return await safeJSONRequest(url)
 	},
-	async details(type: string, TMDBid: string, params: Record<string, string>) {
+	async details(type: string, TMDBid: string, params: Record<string, string> = {}) {
 		if (typeof TMDBid === "undefined" || typeof type === "undefined") { console.error("invalid id: ", TMDBid, "or type: ", type); return void 0 }
 
 		const url = new URL(`https://api.themoviedb.org/3/${type}/${TMDBid}`)
@@ -59,7 +60,7 @@ export const tmdbAPI = {
 		return await safeJSONRequest(url)
 	},
 	/** generic tmbd api requrest. for example "videos" */
-	async genericRequest(type: string, TMDBid: string, route: string, params: Record<string, string>) {
+	async genericRequest(type: string, TMDBid: string, route: string, params: Record<string, string> = {}) {
 		if (typeof TMDBid === "undefined") { console.error("invalid id: ", TMDBid); return void 0 }
 		if (typeof type === "undefined") { console.error("invalid type: ", type); ; return void 0 }
 		if (typeof route === "undefined" || route.trim() === "") { console.error("invalid route: ", route); ; return void 0 }
